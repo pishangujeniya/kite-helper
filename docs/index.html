@@ -79,7 +79,7 @@
                             <span>
                                 <h5>Kite Login</h5>
                                 <h6 style="color: green;" ng-if="kiteInputs.kiteLoginSuccess">
-                                    {{kiteInputs.kiteUsernameInput}}</h6>
+                                    {{kiteInputs.kiteLoginResponseMessage}}</h6>
                                 <h6 style="color: red;" ng-if="!kiteInputs.kiteLoginSuccess">
                                     {{kiteInputs.kiteLoginResponseMessage}}</h6>
                             </span>
@@ -123,9 +123,10 @@
                             aria-controls="selectInstrumentAccordionCollapseContent">
                             <span>
                                 <h5>Select Instrument</h5>
-                                <h6 style="color: green;" ng-if="selectInstruments.selectedExchange">
+                                <h6 style="color: green;"
+                                    ng-if="selectInstruments.selectedExchange && selectInstruments.searchedTradingSymbolQuery.length != 0">
                                     {{selectInstruments.selectedExchange}} |
-                                    TradingSymbol</h6>
+                                    {{selectInstruments.searchedTradingSymbolQuery}}</h6>
                             </span>
                         </button>
 
@@ -147,14 +148,13 @@
                                     </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="selectTradingSymbolInput" class="form-label">Trading Symbol</label>
-                                    <input type="text" class="form-control" id="selectTradingSymbolInput"
-                                        placeholder="Auto Complete Input Box Here" required>
-                                </div>
-                                <br>
-                                <div>
-                                    <button type="button" class="btn btn-primary"
-                                        ng-click="selectInstrumentOnClick()">Select Instrument</button>
+                                    <input type="text" ng-model="selectInstruments.searchedTradingSymbolQuery"
+                                        list="tradingSymbolDataList" ng-change="searchTradingSymbolQueryOnChange()">
+                                    <datalist id="tradingSymbolDataList">
+                                        <option
+                                            ng-repeat="tradingSymbol in selectInstruments.filteredTradingSymbols | filter:selectInstruments.searchedTradingSymbolQuery | limitTo:30 track by $index"
+                                            value="{{tradingSymbol.name}}"></option>
+                                    </datalist>
                                 </div>
                             </form>
                         </div>
@@ -201,7 +201,8 @@
                                 </div>
                                 <br>
                                 <div>
-                                    <button type="button" class="btn btn-primary">Get Data</button>
+                                    <button type="button" class="btn btn-primary" ng-click="getHistoricalData()">Get
+                                        Data</button>
                                 </div>
                             </form>
                         </div>

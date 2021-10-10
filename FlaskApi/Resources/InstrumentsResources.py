@@ -116,11 +116,11 @@ class GetHistoricalData(Resource):
 
     @instruments_resources_api.expect(get_historical_data_request_model)
     def post(self):
+        kh_response: KiteHelperCustomResponse = KiteHelperCustomResponse()
         instrument_token = \
             Zts.instruments_df[(Zts.instruments_df['tradingsymbol'] == request.json['trading_symbol']) & (Zts.instruments_df['exchange'] == request.json['exchange'])][
                 'instrument_token']
         instrument_token = instrument_token.to_list()
-        print('-----',instrument_token)
         if not len(instrument_token):
             hd = []
         else:
@@ -130,8 +130,15 @@ class GetHistoricalData(Resource):
             interval = request.json['interval']
             hd = Zts.zerodha_trader.kite.historical_data(instrument_token, from_date=start_dtm, to_date=end_dtm,
                                                         interval=interval)
-        return Response(response=json.dumps(hd),
-                        status=200)
+        kh_response.result = hd
+        kh_response.error_code = 200
+        
+        flask_response = jsonify(kh_response.__dict__)
+        flask_response.status_code = kh_response.error_code
+
+        return flask_response
+        # return Response(response=json.dumps(hd),
+        #                 status=200)
 
 
 @instruments_resources_api.route('/get_instrument_trading_symbol')
@@ -139,6 +146,7 @@ class GetInstrumentTradingSymbol(Resource):
     get_instrument_trading_symbol_request_model = instruments_resources_api.model(
         'get_instrument_trading_symbol_request_model', {
             'symbol': fields.String(description='symbol name eg REL', required=True),
+            'exchange': fields.String(description='Exchange', required=True),
         })
 
     @instruments_resources_api.expect(get_instrument_trading_symbol_request_model)
@@ -147,8 +155,8 @@ class GetInstrumentTradingSymbol(Resource):
 
         try:
             get_instrument_trading_symbol_response_model.result = list(
-                Zts.instruments_df[
-                    Zts.instruments_df['tradingsymbol'].str.contains(str(request.json['symbol']).upper(), na=False)][
+                Zts.instruments_df[(Zts.instruments_df['exchange'] == request.json['exchange']) &
+                    (Zts.instruments_df['tradingsymbol'].str.contains(str(request.json['symbol']).upper(), na=False))][
                     'tradingsymbol'])
             get_instrument_trading_symbol_response_model.error_code = 200
 
