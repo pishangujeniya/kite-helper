@@ -17,7 +17,7 @@ Simple Application to Download any stock market data in `.csv` format using Kite
 
 - Install dependencies `pip install -r ./requirements.txt` (to generate requirements.txt file from project run `pipreqs ./ --force`)
 - Run `python main.py`
-- Open Site [https://pishangujeniya.github.io/kite-helper/](https://pishangujeniya.github.io/kite-helper/docs)
+- Open Site [https://pishangujeniya.github.io/kite-helper/docs](https://pishangujeniya.github.io/kite-helper/docs)
 - Add your configuration URL mentioned in running Server
 - Login to Kite
 - Select Trading Symbol and Date Range and press **Get Data** 
