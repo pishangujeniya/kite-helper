@@ -15,6 +15,7 @@ Simple Application to Download any stock market data in `.csv` format using Kite
 
 ## 🏃‍♂️ Running Server
 
+- [Download ZIP from Releases and Extract](https://github.com/pishangujeniya/kite-helper/releases)
 - Install dependencies `pip install -r ./requirements.txt` (to generate requirements.txt file from project run `pipreqs ./ --force`)
 - Run `python main.py`
 - Open Site [https://pishangujeniya.github.io/kite-helper/docs](https://pishangujeniya.github.io/kite-helper/docs)
