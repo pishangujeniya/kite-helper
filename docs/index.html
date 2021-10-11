@@ -68,7 +68,8 @@
                                         eg: http://192.168.0.109:4000)</div>
                                 </div>
 
-                                <button type="button" class="btn btn-primary" ng-click="kiteInstrumentsUpdateClick()">Update Kite Instruments Data</button>
+                                <button type="button" class="btn btn-primary"
+                                    ng-click="kiteInstrumentsUpdateClick()">Update Kite Instruments Data</button>
                             </form>
                         </div>
                     </div>
@@ -204,7 +205,8 @@
                                 </div>
                                 <br>
                                 <div>
-                                    <button type="button" class="btn btn-success" ng-click="getHistoricalData()">Get Data</button>
+                                    <button type="button" class="btn btn-success" ng-click="getHistoricalData()">Get
+                                        Data</button>
                                 </div>
                             </form>
                         </div>
@@ -265,6 +267,15 @@
             </div>
         </footer>
     </div>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-80FM2MN74N"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-80FM2MN74N');
+    </script>
 </body>
 
 </html>
