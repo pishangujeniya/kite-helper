@@ -7,7 +7,7 @@ from IniConfiguration import IniConfiguration
 
 if __name__ == '__main__':
     IniConfiguration.read_ini()
-    ZerodhaTraderStatic.ZerodhaTraderStatic.instruments_df = GlobalHelper.read_instruments_csv()
+    ZerodhaTraderStatic.ZerodhaTraderStatic.instruments_df = GlobalHelper.read_instruments_csv(force=False)
     if not os.path.exists(IniConfiguration.get_value("system", "data_dir_path")):
         os.mkdir(path=IniConfiguration.get_value("system", "data_dir_path"))
     flask_app.run(host='0.0.0.0', port='4000', debug=True)

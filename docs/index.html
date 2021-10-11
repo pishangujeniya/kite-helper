@@ -67,6 +67,8 @@
                                         (for
                                         eg: http://192.168.0.109:4000)</div>
                                 </div>
+
+                                <button type="button" class="btn btn-primary" ng-click="kiteInstrumentsUpdateClick()">Update Kite Instruments Data</button>
                             </form>
                         </div>
                     </div>
@@ -111,7 +113,7 @@
                                         ng-model="kiteInputs.kitePinInput" required placeholder="Pin">
                                 </div>
 
-                                <button type="button" class="btn btn-primary" ng-click="kiteLoginOnClick()">Login
+                                <button type="button" class="btn btn-success" ng-click="kiteLoginOnClick()">Login
                                     Kite</button>
                             </form>
                         </div>
@@ -202,8 +204,7 @@
                                 </div>
                                 <br>
                                 <div>
-                                    <button type="button" class="btn btn-primary" ng-click="getHistoricalData()">Get
-                                        Data</button>
+                                    <button type="button" class="btn btn-success" ng-click="getHistoricalData()">Get Data</button>
                                 </div>
                             </form>
                         </div>

@@ -149,7 +149,8 @@ myapp.controller("IndexController", function ($scope, $http) {
     $scope.kiteHelper.config = {
         accounts_resources: {
             login: "/accounts/kite/login",
-            profile: "/accounts/kite/profile"
+            profile: "/accounts/kite/profile",
+            update_instruments_csv:"/accounts/kite/update_instruments_csv"
         },
         instruments_resources: {
             get_all_instruments: "/instruments/get_all_instruments",
@@ -161,6 +162,16 @@ myapp.controller("IndexController", function ($scope, $http) {
 
     $scope.configurationInputs = {};
     $scope.configurationInputs.configurationAPIPathInput = "http://192.168.0.109:4000";
+
+    $scope.kiteInstrumentsUpdateClick = function() {
+        $http.get($scope.configurationInputs.configurationAPIPathInput + $scope.kiteHelper.config.accounts_resources.update_instruments_csv, {
+        }).then(function (response) {
+            if (response.status == 200) {
+            } else {
+            }
+            console.log(response);
+        });
+    }
 
     //#endregion Configuration
 

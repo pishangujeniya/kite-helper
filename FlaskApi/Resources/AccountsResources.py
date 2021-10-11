@@ -1,5 +1,6 @@
 from flask import Response, json, request, jsonify
 from flask_restx import Namespace, Resource, fields
+from FlaskApi.GlobalHelper import GlobalHelper
 
 from FlaskApi.Models.GlobalModels import KiteHelperCustomResponse
 from FlaskApi.ZerodhaTraderStatic import ZerodhaTraderStatic as Zts
@@ -50,3 +51,11 @@ class KiteProfile(Resource):
     def get(self):
         p = Zts.zerodha_trader.kite.profile()
         return Response(response=json.dumps(p), status=200, mimetype="application/json")
+
+@account_resources_api.route('/kite/update_instruments_csv')
+class KiteProfile(Resource):
+
+    @account_resources_api.doc("Updates Instruments CSV in Local System")
+    def get(self):
+        Zts.instruments_df = GlobalHelper.read_instruments_csv(force=True)
+        return Response(response=json.dumps({"success":True}), status=200, mimetype="application/json")

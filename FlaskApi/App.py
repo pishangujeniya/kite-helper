@@ -9,8 +9,8 @@ flask_app = Flask(__name__)
 CORS(flask_app)
 api = Api(app=flask_app,
           version="1.0",
-          title="Option Analysis",
-          description="Option Analysis and live Backtesting System")
+          title="Kite Helper",
+          description="Kite related API")
 
 api.add_namespace(ns=account_resources_api, path="/accounts")
 api.add_namespace(ns=instruments_resources_api, path="/instruments")
