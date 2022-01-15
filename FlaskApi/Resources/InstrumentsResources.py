@@ -15,6 +15,7 @@ def listOfStringsToUpper(lst):
         lst[i] = lst[i].upper()
     return lst
 
+
 class GetInstrumentTradingSymbolResponseModel(KiteHelperCustomResponse):
     def __init__(self) -> None:
         super().__init__()
@@ -83,7 +84,7 @@ class GetAllInstruments1(Resource):
             instruments = pd.read_csv('https://api.kite.trade/instruments')
             # to handle empty strings
             if len(required_exchanges[0]):
-                instruments = instruments[ instruments['exchange'].isin(required_exchanges)]
+                instruments = instruments[instruments['exchange'].isin(required_exchanges)]
             if len(required_names[0]):
                 instruments = instruments[instruments['name'].isin(required_names)]
             if len(required_segments[0]):
@@ -91,7 +92,7 @@ class GetAllInstruments1(Resource):
             if len(required_instrument_type[0]):
                 instruments = instruments[instruments['instrument_type'].isin(required_instrument_type)]
 
-            instruments.fillna('',inplace=True)
+            instruments.fillna('', inplace=True)
             kh_response.result = instruments.to_dict(orient='records')
             kh_response.error_code = 200
 
@@ -111,14 +112,15 @@ class GetHistoricalData(Resource):
         'trading_symbol': fields.String(description='trading_symbol for example RELIANCE', required=True),
         'start_dtm': fields.String(description='Start DateTime yyyy-mm-dd hh:mm:ss IST', required=True),
         'end_dtm': fields.String(description='End DateTime yyyy-mm-dd hh:mm:ss IST', required=True),
-        'interval': fields.String(description='interval', enum=['minute', '5minute','10minute','15minute','day'])
+        'interval': fields.String(description='interval', enum=['minute', '5minute', '10minute', '15minute', 'day'])
     })
 
     @instruments_resources_api.expect(get_historical_data_request_model)
     def post(self):
         kh_response: KiteHelperCustomResponse = KiteHelperCustomResponse()
         instrument_token = \
-            Zts.instruments_df[(Zts.instruments_df['tradingsymbol'] == request.json['trading_symbol']) & (Zts.instruments_df['exchange'] == request.json['exchange'])][
+            Zts.instruments_df[(Zts.instruments_df['tradingsymbol'] == request.json['trading_symbol']) & (
+                    Zts.instruments_df['exchange'] == request.json['exchange'])][
                 'instrument_token']
         instrument_token = instrument_token.to_list()
         if not len(instrument_token):
@@ -128,11 +130,13 @@ class GetHistoricalData(Resource):
             start_dtm = parser.parse(request.json['start_dtm'])
             end_dtm = parser.parse(request.json['end_dtm'])
             interval = request.json['interval']
-            hd = Zts.zerodha_trader.kite.historical_data(instrument_token, from_date=start_dtm, to_date=end_dtm,
-                                                        interval=interval)
+            hd = Zts.zerodha_trader.kite.historical_data(instrument_token,
+                                                         from_date=start_dtm.strftime("%Y-%m-%d %H:%M:%S"),
+                                                         to_date=end_dtm.strftime("%Y-%m-%d %H:%M:%S"),
+                                                         interval=interval)
         kh_response.result = hd
         kh_response.error_code = 200
-        
+
         flask_response = jsonify(kh_response.__dict__)
         flask_response.status_code = kh_response.error_code
 
@@ -156,7 +160,8 @@ class GetInstrumentTradingSymbol(Resource):
         try:
             get_instrument_trading_symbol_response_model.result = list(
                 Zts.instruments_df[(Zts.instruments_df['exchange'] == request.json['exchange']) &
-                    (Zts.instruments_df['tradingsymbol'].str.contains(str(request.json['symbol']).upper(), na=False))][
+                                   (Zts.instruments_df['tradingsymbol'].str.contains(
+                                       str(request.json['symbol']).upper(), na=False))][
                     'tradingsymbol'])
             get_instrument_trading_symbol_response_model.error_code = 200
 
