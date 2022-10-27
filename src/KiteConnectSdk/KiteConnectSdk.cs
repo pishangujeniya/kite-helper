@@ -1,13 +1,182 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
+using System.Text;
+using System.Web;
+using System.Xml.Linq;
 using KiteConnect;
+using Newtonsoft.Json.Linq;
 
 namespace KiteConnectSdk
 {
 
     public class KiteConnectSdk : Kite
     {
-        public KiteConnectSdk(string APIKey, string AccessToken = null, string Root = null, bool Debug = false, int Timeout = 7000, WebProxy Proxy = null, int Pool = 2) : base(APIKey, AccessToken, Root, Debug, Timeout, null, Pool)
+        private string UserAgentHeader = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36";
+        private string AcceptHeader = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9";
+        private string UserId = string.Empty;
+        private string EncToken = string.Empty;
+        public bool IsAuthorized => (!string.IsNullOrWhiteSpace(UserId) && !string.IsNullOrWhiteSpace(EncToken));
+
+        private static readonly HttpClient client = new HttpClient();
+
+        public KiteConnectSdk() : base(string.Empty)
         {
+
+        }
+
+        public void Login(string userId, string password, string appCode)
+        {
+            this.UserId = userId;
+
+            string loginUrl = "https://kite.zerodha.com/api/login";
+
+            string loginPostData = "";
+            Dictionary<string, string> postParameters = new() { { "user_id", userId }, { "password", password } };
+
+            foreach (string key in postParameters.Keys)
+            {
+                loginPostData += HttpUtility.UrlEncode(key) + "=" + HttpUtility.UrlEncode(postParameters[key]) + "&";
+            }
+
+            HttpWebRequest loginHttpWebRequest = (HttpWebRequest)WebRequest.Create(loginUrl);
+            loginHttpWebRequest.Method = "POST";
+
+            byte[] loginData = Encoding.ASCII.GetBytes(loginPostData);
+
+            loginHttpWebRequest.ContentType = "application/x-www-form-urlencoded";
+            loginHttpWebRequest.ContentLength = loginData.Length;
+
+            AddExtraHeaders(ref loginHttpWebRequest);
+
+            Stream requestStream = loginHttpWebRequest.GetRequestStream();
+            requestStream.Write(loginData, 0, loginData.Length);
+            requestStream.Close();
+
+            HttpWebResponse myHttpWebResponse = (HttpWebResponse)loginHttpWebRequest.GetResponse();
+
+            Stream responseStream = myHttpWebResponse.GetResponseStream();
+
+            StreamReader myStreamReader = new StreamReader(responseStream, Encoding.Default);
+
+            string responseContent = myStreamReader.ReadToEnd();
+
+            myStreamReader.Close();
+            responseStream.Close();
+
+            myHttpWebResponse.Close();
+
+            JToken token = JObject.Parse(responseContent);
+
+            string? status = (string?)(token.SelectToken("status"));
+            if (!string.IsNullOrWhiteSpace(status) && status.ToLower().Equals("success"))
+            {
+                string? requestId = (string?)token.SelectToken("data")?.SelectToken("request_id");
+                if (!string.IsNullOrWhiteSpace(requestId))
+                {
+                    this.TwoFactorAuthentication(userId, requestId, appCode);
+                }
+                else
+                {
+                    throw new GeneralException("request id not found in the login attempt", myHttpWebResponse.StatusCode);
+                }
+            }
+            else
+            {
+                throw new TokenException("login attempt failed", myHttpWebResponse.StatusCode);
+            }
+        }
+
+        private void TwoFactorAuthentication(string userId, string requestId, string appCode)
+        {
+            string twoFactorAuthenticationUrl = "https://kite.zerodha.com/api/twofa";
+
+            string twofaPostData = "";
+            Dictionary<string, string> postParameters = new()
+            {
+                { "user_id", userId },
+                { "request_id", requestId },
+                { "twofa_type", "app_code" },
+                { "twofa_value", appCode }
+            };
+
+            foreach (string key in postParameters.Keys)
+            {
+                twofaPostData += HttpUtility.UrlEncode(key) + "=" + HttpUtility.UrlEncode(postParameters[key]) + "&";
+            }
+
+            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(twoFactorAuthenticationUrl);
+            httpWebRequest.Method = "POST";
+
+            byte[] data = Encoding.ASCII.GetBytes(twofaPostData);
+
+            httpWebRequest.ContentType = "application/x-www-form-urlencoded";
+            httpWebRequest.ContentLength = data.Length;
+
+            AddExtraHeaders(ref httpWebRequest);
+
+            Stream requestStream = httpWebRequest.GetRequestStream();
+            requestStream.Write(data, 0, data.Length);
+            requestStream.Close();
+
+            HttpWebResponse myHttpWebResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+            Stream responseStream = myHttpWebResponse.GetResponseStream();
+
+            StreamReader myStreamReader = new StreamReader(responseStream, Encoding.Default);
+
+            string responseContent = myStreamReader.ReadToEnd();
+
+            myStreamReader.Close();
+            responseStream.Close();
+
+            myHttpWebResponse.Close();
+
+            JToken token = JObject.Parse(responseContent);
+
+            string? status = (string?)(token.SelectToken("status"));
+            if (!string.IsNullOrWhiteSpace(status) && status.ToLower().Equals("success"))
+            {
+                // Means succeeded
+                this.EncToken = myHttpWebResponse.Cookies.ToList().FirstOrDefault(x => x.Name.ToLower().Equals("enctoken"))?.Value ?? string.Empty;
+            }
+            else
+            {
+                throw new TokenException("app code verification failed", myHttpWebResponse.StatusCode);
+            }
+        }
+
+        public override void AddExtraHeaders(ref HttpWebRequest Req)
+        {
+            base.AddExtraHeaders(ref Req);
+
+            #region Custom Headers
+            Req.UserAgent = UserAgentHeader;
+            Req.Headers.Add(HttpRequestHeader.Accept, AcceptHeader);
+            Req.Headers.Add(HttpRequestHeader.AcceptLanguage, "en-GB,en-US;q=0.9,en;q=0.8");
+            Req.Headers.Add("X-Kite-Version", "3.0.6");
+            Req.Headers.Add("sec-fetch-site", "same-origin");
+            Req.Headers.Add("sec-fetch-mode", "cors");
+            Req.Headers.Add("sec-fetch-dest", "empty");
+            Req.Headers.Add(HttpRequestHeader.Referer, "https://kite.zerodha.com/dashboard");
+
+            if (!string.IsNullOrWhiteSpace(this.UserId))
+            {
+                Req.Headers.Add("x-kite-userid", UserId);
+            }
+            else
+            {
+                Req.Headers.Remove("x-kite-userid");
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.EncToken))
+            {
+                Req.Headers.Add(HttpRequestHeader.Authorization, $"enctoken {this.EncToken}");
+            }
+            else
+            {
+                Req.Headers.Remove(HttpRequestHeader.Authorization);
+            }
+            #endregion
         }
 
         public override object Request(string Route, string Method, dynamic Params = null, Dictionary<string, dynamic> QueryParams = null, bool json = false)
