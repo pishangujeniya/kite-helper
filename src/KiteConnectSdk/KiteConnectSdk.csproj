@@ -4,6 +4,13 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Authors>pishangujeniya</Authors>
+    <Description>Kite Connect SDK</Description>
+    <PackageProjectUrl>https://github.com/pishangujeniya/kite-helper</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/pishangujeniya/kite-helper.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>kite;kiteconnect;zerodha</PackageTags>
+    <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

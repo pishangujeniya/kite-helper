@@ -1,32 +1,62 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Text;
 using System.Web;
-using System.Xml.Linq;
 using KiteConnect;
 using Newtonsoft.Json.Linq;
 
 namespace KiteConnectSdk
 {
-
+    /// <summary>
+    /// This class helps to convert the API calls with APIKey to Cookie based
+    /// </summary>
     public class KiteConnectSdk : Kite
     {
-        private string UserAgentHeader = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36";
-        private string AcceptHeader = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9";
-        private string UserId = string.Empty;
-        private string EncToken = string.Empty;
-        public bool IsAuthorized => (!string.IsNullOrWhiteSpace(UserId) && !string.IsNullOrWhiteSpace(EncToken));
+        /**
+         *
+         * 1. Original Kite class of the official library uses _root variable for API domain.
+         * 2. We needed to change _root to browser based url, which is done in constructor.
+         * 3. We also need to concatenate a patch to the _root url, which is done in constructor.
+         * 4. We need to replace the headers with browser based headers which is overriden in AddExtraHeaders method.
+         * 5. We need to first login and then two factor authentication.
+         * 6. On success of both we need to read the cookie value of enctoken name and then after every request should have that token in the Authorization header.
+         * 7. The _request method is overriden with one logic where the every response of it should update the value of _encToken with the last received response value.
+         *
+         **/
 
-        private static readonly HttpClient client = new HttpClient();
+        /// <summary>
+        /// Stores the User ID.
+        /// </summary>
+        private string _userId = string.Empty;
 
+        /// <summary>
+        /// Keeps the last received enctoken cookie value.
+        /// </summary>
+        private string _encToken = string.Empty;
+
+        /// <summary>
+        /// A simpler way to detect the session is active or not.
+        /// </summary>
+        public bool IsAuthorized => (!string.IsNullOrWhiteSpace(_userId) && !string.IsNullOrWhiteSpace(_encToken));
+
+        /// <summary>
+        /// Default constructor, which sets the browser based _root url with a concatenation patch
+        /// </summary>
         public KiteConnectSdk() : base(string.Empty)
         {
-
+            this._root = "https://kite.zerodha.com" + "/oms";
         }
 
-        public void Login(string userId, string password, string appCode)
+        /// <summary>
+        /// Fully functional password based login flow including two factor authentication.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="password"></param>
+        /// <param name="appCode"></param>
+        /// <exception cref="GeneralException"></exception>
+        /// <exception cref="TokenException"></exception>
+        public bool Login(string userId, string password, string appCode)
         {
-            this.UserId = userId;
+            this._userId = userId;
 
             string loginUrl = "https://kite.zerodha.com/api/login";
 
@@ -48,50 +78,49 @@ namespace KiteConnectSdk
 
             AddExtraHeaders(ref loginHttpWebRequest);
 
-            Stream requestStream = loginHttpWebRequest.GetRequestStream();
-            requestStream.Write(loginData, 0, loginData.Length);
-            requestStream.Close();
+            Stream loginRequestStream = loginHttpWebRequest.GetRequestStream();
+            loginRequestStream.Write(loginData, 0, loginData.Length);
+            loginRequestStream.Close();
 
-            HttpWebResponse myHttpWebResponse = (HttpWebResponse)loginHttpWebRequest.GetResponse();
+            HttpWebResponse loginHttpWebResponse = (HttpWebResponse)loginHttpWebRequest.GetResponse();
 
-            Stream responseStream = myHttpWebResponse.GetResponseStream();
+            Stream loginResponseStream = loginHttpWebResponse.GetResponseStream();
 
-            StreamReader myStreamReader = new StreamReader(responseStream, Encoding.Default);
+            StreamReader loginStreamReader = new StreamReader(loginResponseStream, Encoding.Default);
 
-            string responseContent = myStreamReader.ReadToEnd();
+            string loginResponseContent = loginStreamReader.ReadToEnd();
 
-            myStreamReader.Close();
-            responseStream.Close();
+            loginStreamReader.Close();
+            loginResponseStream.Close();
 
-            myHttpWebResponse.Close();
+            loginHttpWebResponse.Close();
 
-            JToken token = JObject.Parse(responseContent);
+            JToken loginResponseToken = JObject.Parse(loginResponseContent);
 
-            string? status = (string?)(token.SelectToken("status"));
-            if (!string.IsNullOrWhiteSpace(status) && status.ToLower().Equals("success"))
+            string? loginResponseStatus = (string?)(loginResponseToken.SelectToken("status"));
+            if (!string.IsNullOrWhiteSpace(loginResponseStatus) && loginResponseStatus.ToLower().Equals("success"))
             {
-                string? requestId = (string?)token.SelectToken("data")?.SelectToken("request_id");
-                if (!string.IsNullOrWhiteSpace(requestId))
+                string? loginResponseRequestId = (string?)loginResponseToken.SelectToken("data")?.SelectToken("request_id");
+                if (!string.IsNullOrWhiteSpace(loginResponseRequestId))
                 {
-                    this.TwoFactorAuthentication(userId, requestId, appCode);
+                    return TwoFactorAuthentication(loginResponseRequestId);
                 }
                 else
                 {
-                    throw new GeneralException("request id not found in the login attempt", myHttpWebResponse.StatusCode);
+                    throw new GeneralException("request id not found in the login attempt", loginHttpWebResponse.StatusCode);
                 }
             }
             else
             {
-                throw new TokenException("login attempt failed", myHttpWebResponse.StatusCode);
+                throw new TokenException("login attempt failed", loginHttpWebResponse.StatusCode);
             }
-        }
 
-        private void TwoFactorAuthentication(string userId, string requestId, string appCode)
-        {
-            string twoFactorAuthenticationUrl = "https://kite.zerodha.com/api/twofa";
+            bool TwoFactorAuthentication(string requestId)
+            {
+                string twoFactorAuthenticationUrl = "https://kite.zerodha.com/api/twofa";
 
-            string twofaPostData = "";
-            Dictionary<string, string> postParameters = new()
+                string twofaPostData = "";
+                Dictionary<string, string> postParameters = new()
             {
                 { "user_id", userId },
                 { "request_id", requestId },
@@ -99,78 +128,98 @@ namespace KiteConnectSdk
                 { "twofa_value", appCode }
             };
 
-            foreach (string key in postParameters.Keys)
-            {
-                twofaPostData += HttpUtility.UrlEncode(key) + "=" + HttpUtility.UrlEncode(postParameters[key]) + "&";
-            }
+                foreach (string key in postParameters.Keys)
+                {
+                    twofaPostData += HttpUtility.UrlEncode(key) + "=" + HttpUtility.UrlEncode(postParameters[key]) + "&";
+                }
 
-            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(twoFactorAuthenticationUrl);
-            httpWebRequest.Method = "POST";
+                HttpWebRequest twoFahttpWebRequest = (HttpWebRequest)WebRequest.Create(twoFactorAuthenticationUrl);
+                twoFahttpWebRequest.Method = "POST";
 
-            byte[] data = Encoding.ASCII.GetBytes(twofaPostData);
+                byte[] twoFaData = Encoding.ASCII.GetBytes(twofaPostData);
 
-            httpWebRequest.ContentType = "application/x-www-form-urlencoded";
-            httpWebRequest.ContentLength = data.Length;
+                twoFahttpWebRequest.ContentType = "application/x-www-form-urlencoded";
+                twoFahttpWebRequest.ContentLength = twoFaData.Length;
 
-            AddExtraHeaders(ref httpWebRequest);
+                AddExtraHeaders(ref twoFahttpWebRequest);
 
-            Stream requestStream = httpWebRequest.GetRequestStream();
-            requestStream.Write(data, 0, data.Length);
-            requestStream.Close();
+                Stream twoFaRequestStream = twoFahttpWebRequest.GetRequestStream();
+                twoFaRequestStream.Write(twoFaData, 0, twoFaData.Length);
+                twoFaRequestStream.Close();
 
-            HttpWebResponse myHttpWebResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                HttpWebResponse twoFaHttpWebResponse = (HttpWebResponse)twoFahttpWebRequest.GetResponse();
+                string header = twoFaHttpWebResponse.GetResponseHeader("Set-Cookie");
+                Stream twoFaResponseStream = twoFaHttpWebResponse.GetResponseStream();
 
-            Stream responseStream = myHttpWebResponse.GetResponseStream();
+                StreamReader twoFaStreamReader = new StreamReader(twoFaResponseStream, Encoding.Default);
 
-            StreamReader myStreamReader = new StreamReader(responseStream, Encoding.Default);
+                string responseContent = twoFaStreamReader.ReadToEnd();
 
-            string responseContent = myStreamReader.ReadToEnd();
+                SetEncTokenIfReceived(twoFaHttpWebResponse);
 
-            myStreamReader.Close();
-            responseStream.Close();
+                twoFaStreamReader.Close();
+                twoFaResponseStream.Close();
 
-            myHttpWebResponse.Close();
+                twoFaHttpWebResponse.Close();
 
-            JToken token = JObject.Parse(responseContent);
+                JToken twoFaToken = JObject.Parse(responseContent);
 
-            string? status = (string?)(token.SelectToken("status"));
-            if (!string.IsNullOrWhiteSpace(status) && status.ToLower().Equals("success"))
-            {
-                // Means succeeded
-                this.EncToken = myHttpWebResponse.Cookies.ToList().FirstOrDefault(x => x.Name.ToLower().Equals("enctoken"))?.Value ?? string.Empty;
-            }
-            else
-            {
-                throw new TokenException("app code verification failed", myHttpWebResponse.StatusCode);
+                string? twoFaResponseStatus = (string?)(twoFaToken.SelectToken("status"));
+                if (!string.IsNullOrWhiteSpace(twoFaResponseStatus) && twoFaResponseStatus.ToLower().Equals("success"))
+                {
+                    // Means succeeded
+                    return true;
+                }
+                else
+                {
+                    throw new TokenException("app code verification failed", twoFaHttpWebResponse.StatusCode);
+                }
             }
         }
 
+        /// <summary>
+        /// A method which will extract the enctoken from the cookies and set it to the _encToken variable
+        /// </summary>
+        /// <param name="webResponse"></param>
+        private void SetEncTokenIfReceived(WebResponse webResponse)
+        {
+            string encTokenCookie = ((HttpWebResponse)webResponse).Cookies.ToList().FirstOrDefault(x => x.Name.ToLower().Equals("enctoken"))?.Value ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(encTokenCookie)) this._encToken = encTokenCookie;
+        }
+
+        /// <summary>
+        /// Adds the browser based extra custom headers needed for the requests
+        /// </summary>
+        /// <param name="Req"></param>
         public override void AddExtraHeaders(ref HttpWebRequest Req)
         {
+
             base.AddExtraHeaders(ref Req);
 
+            Req.CookieContainer = new CookieContainer();
             #region Custom Headers
-            Req.UserAgent = UserAgentHeader;
-            Req.Headers.Add(HttpRequestHeader.Accept, AcceptHeader);
-            Req.Headers.Add(HttpRequestHeader.AcceptLanguage, "en-GB,en-US;q=0.9,en;q=0.8");
-            Req.Headers.Add("X-Kite-Version", "3.0.6");
-            Req.Headers.Add("sec-fetch-site", "same-origin");
-            Req.Headers.Add("sec-fetch-mode", "cors");
-            Req.Headers.Add("sec-fetch-dest", "empty");
-            Req.Headers.Add(HttpRequestHeader.Referer, "https://kite.zerodha.com/dashboard");
+            Req.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36";
+            Req.Headers.Remove("BabaRamdev");
+            Req.Headers.Remove(HttpRequestHeader.Accept); Req.Headers.Add(HttpRequestHeader.Accept, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
+            Req.Headers.Remove(HttpRequestHeader.AcceptLanguage); Req.Headers.Add(HttpRequestHeader.AcceptLanguage, "en-GB,en-US;q=0.9,en;q=0.8");
+            Req.Headers.Remove("X-Kite-Version"); Req.Headers.Add("X-Kite-Version", "3.0.6");
+            Req.Headers.Remove("sec-fetch-site"); Req.Headers.Add("sec-fetch-site", "same-origin");
+            Req.Headers.Remove("sec-fetch-mode"); Req.Headers.Add("sec-fetch-mode", "cors");
+            Req.Headers.Remove("sec-fetch-dest"); Req.Headers.Add("sec-fetch-dest", "empty");
+            Req.Headers.Remove(HttpRequestHeader.Referer); Req.Headers.Add(HttpRequestHeader.Referer, "https://kite.zerodha.com/dashboard");
 
-            if (!string.IsNullOrWhiteSpace(this.UserId))
+            if (!string.IsNullOrWhiteSpace(this._userId))
             {
-                Req.Headers.Add("x-kite-userid", UserId);
+                Req.Headers.Remove("x-kite-userid"); Req.Headers.Add("x-kite-userid", _userId);
             }
             else
             {
                 Req.Headers.Remove("x-kite-userid");
             }
 
-            if (!string.IsNullOrWhiteSpace(this.EncToken))
+            if (!string.IsNullOrWhiteSpace(this._encToken))
             {
-                Req.Headers.Add(HttpRequestHeader.Authorization, $"enctoken {this.EncToken}");
+                Req.Headers.Remove(HttpRequestHeader.Authorization); Req.Headers.Add(HttpRequestHeader.Authorization, $"enctoken {this._encToken}");
             }
             else
             {
@@ -179,6 +228,22 @@ namespace KiteConnectSdk
             #endregion
         }
 
+        /// <summary>
+        /// Overriden method of request where only the value of last received enctoken cookie is get and stored in the variable.
+        /// </summary>
+        /// <param name="Route"></param>
+        /// <param name="Method"></param>
+        /// <param name="Params"></param>
+        /// <param name="QueryParams"></param>
+        /// <param name="json"></param>
+        /// <returns></returns>
+        /// <exception cref="GeneralException"></exception>
+        /// <exception cref="TokenException"></exception>
+        /// <exception cref="PermissionException"></exception>
+        /// <exception cref="OrderException"></exception>
+        /// <exception cref="InputException"></exception>
+        /// <exception cref="DataException"></exception>
+        /// <exception cref="NetworkException"></exception>
         public override object Request(string Route, string Method, dynamic Params = null, Dictionary<string, dynamic> QueryParams = null, bool json = false)
         {
             string route = _root + _routes[Route];
@@ -259,6 +324,7 @@ namespace KiteConnectSdk
             try
             {
                 webResponse = request.GetResponse();
+                SetEncTokenIfReceived(webResponse);
             }
             catch (WebException e)
             {
