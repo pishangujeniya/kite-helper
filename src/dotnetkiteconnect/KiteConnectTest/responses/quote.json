@@ -1,0 +1,97 @@
+﻿{
+    "status": "success",
+    "data": {
+        "NSE:ASHOKLEY": {
+            "instrument_token": 54273,
+            "timestamp": "2019-12-06 15:20:12",
+            "last_trade_time": "2019-12-06 15:20:12",
+            "last_price": 76.6,
+            "last_quantity": 44,
+            "buy_quantity": 1280874,
+            "sell_quantity": 1190458,
+            "volume": 12995404,
+            "average_price": 76.35,
+            "oi": 0,
+            "oi_day_high": 0,
+            "oi_day_low": 0,
+            "net_change": 0,
+            "lower_circuit_limit": 68.85,
+            "upper_circuit_limit": 84.05,
+            "ohlc": {
+                "open": 76.9,
+                "high": 77.2,
+                "low": 75.65,
+                "close": 76.45
+            },
+            "depth": {
+                "buy": [
+                    {
+                        "price": 76.5,
+                        "quantity": 14620,
+                        "orders": 12
+                    },
+                    {
+                        "price": 76.45,
+                        "quantity": 16931,
+                        "orders": 31
+                    },
+                    {
+                        "price": 76.4,
+                        "quantity": 109466,
+                        "orders": 32
+                    },
+                    {
+                        "price": 76.35,
+                        "quantity": 13664,
+                        "orders": 24
+                    },
+                    {
+                        "price": 76.3,
+                        "quantity": 14116,
+                        "orders": 33
+                    }
+                ],
+                "sell": [
+                    {
+                        "price": 76.6,
+                        "quantity": 54310,
+                        "orders": 50
+                    },
+                    {
+                        "price": 76.65,
+                        "quantity": 13405,
+                        "orders": 24
+                    },
+                    {
+                        "price": 76.7,
+                        "quantity": 13549,
+                        "orders": 28
+                    },
+                    {
+                        "price": 76.75,
+                        "quantity": 17646,
+                        "orders": 29
+                    },
+                    {
+                        "price": 76.8,
+                        "quantity": 11477,
+                        "orders": 24
+                    }
+                ]
+            }
+        },
+        "NSE:NIFTY 50": {
+            "instrument_token": 256265,
+            "tradingsymbol": "NIFTY 50",
+            "timestamp": "2019-12-06 15:20:12",
+            "last_price": 11917.6,
+            "net_change": -100.8,
+            "ohlc": {
+                "open": 12047.35,
+                "high": 12057.05,
+                "low": 11888.85,
+                "close": 12018.4
+            }
+        }
+    }
+}
