@@ -392,6 +392,10 @@ namespace KiteConnectSdk
             }
         }
 
+        /// <summary>
+        /// Provides the Instruments CSV file into DataTable
+        /// </summary>
+        /// <returns></returns>
         public async Task<System.Data.DataTable> GetInstrumentsCsv()
         {
             using HttpClient httpClient = new HttpClient();
