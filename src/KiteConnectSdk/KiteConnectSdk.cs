@@ -1,13 +1,18 @@
-﻿using System.Net;
+﻿
+using System.Data;
+using System.Globalization;
+using System.Net;
 using System.Text;
 using System.Web;
+using CsvHelper;
 using KiteConnect;
 using Newtonsoft.Json.Linq;
+using DataException = KiteConnect.DataException;
 
 namespace KiteConnectSdk
 {
     /// <summary>
-    /// This class helps to convert the API calls with APIKey to Cookie based
+    /// This class helps to convert the API calls from APIKey to Cookie based
     /// </summary>
     public class KiteConnectSdk : Kite
     {
@@ -43,7 +48,7 @@ namespace KiteConnectSdk
         /// </summary>
         public KiteConnectSdk() : base(string.Empty)
         {
-            this._root = "https://kite.zerodha.com" + "/oms";
+            this._root = Constants.KiteBrowserApiRoot;
         }
 
         /// <summary>
@@ -197,9 +202,10 @@ namespace KiteConnectSdk
             base.AddExtraHeaders(ref Req);
 
             Req.CookieContainer = new CookieContainer();
+
             #region Custom Headers
+
             Req.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36";
-            Req.Headers.Remove("BabaRamdev");
             Req.Headers.Remove(HttpRequestHeader.Accept); Req.Headers.Add(HttpRequestHeader.Accept, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
             Req.Headers.Remove(HttpRequestHeader.AcceptLanguage); Req.Headers.Add(HttpRequestHeader.AcceptLanguage, "en-GB,en-US;q=0.9,en;q=0.8");
             Req.Headers.Remove("X-Kite-Version"); Req.Headers.Add("X-Kite-Version", "3.0.6");
@@ -225,6 +231,7 @@ namespace KiteConnectSdk
             {
                 Req.Headers.Remove(HttpRequestHeader.Authorization);
             }
+
             #endregion
         }
 
@@ -242,7 +249,7 @@ namespace KiteConnectSdk
         /// <exception cref="PermissionException"></exception>
         /// <exception cref="OrderException"></exception>
         /// <exception cref="InputException"></exception>
-        /// <exception cref="DataException"></exception>
+        /// <exception cref="KiteConnect.DataException"></exception>
         /// <exception cref="NetworkException"></exception>
         public override object Request(string Route, string Method, dynamic Params = null, Dictionary<string, dynamic> QueryParams = null, bool json = false)
         {
@@ -383,6 +390,19 @@ namespace KiteConnectSdk
                         throw new DataException("Unexpected content type " + webResponse.ContentType + " " + response);
                 }
             }
+        }
+
+        public async Task<System.Data.DataTable> GetInstrumentsCsv()
+        {
+            using HttpClient httpClient = new HttpClient();
+            Stream stream = await httpClient.GetStreamAsync(Constants.KiteInstrumentsCsvUrl);
+            using StreamReader reader = new StreamReader(stream);
+            using CsvReader csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            // Do any configuration to `CsvReader` before creating CsvDataReader.
+            using CsvDataReader dr = new CsvDataReader(csv);
+            DataTable dt = new System.Data.DataTable();
+            dt.Load(dr);
+            return dt;
         }
     }
 }
