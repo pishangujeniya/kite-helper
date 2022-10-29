@@ -1,12 +1,12 @@
 # Getting Angular Build
-FROM node:16.16.0-alpine AS angular_build
+FROM node:18.12.0-alpine AS angular_build
 RUN mkdir /home/node/.npm-global
 ENV PATH=/home/node/.npm-global/bin:$PATH
 ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
-RUN npm install --location=global @angular/cli@14.2.7
+RUN npm install --location=global @angular/cli@14.2.0
 WORKDIR /kitehelper
 COPY ./src/KiteHelper/ClientApp/ .
-RUN npm install
+RUN npm run install:packages
 RUN ng build --configuration production --output-path=/kitehelper/dist
 
 # Getting Dotnet project build

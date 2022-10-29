@@ -33,17 +33,11 @@
             </span>
             <input nbInput fullWidth [(ngModel)]="user.password" #password="ngModel" name="password" type="password"
                 id="input-password" placeholder="Password" fieldSize="large" tabindex="2"
-                [status]="password.dirty ? (password.invalid  ? 'danger' : 'success') : 'basic'" minlength="6" maxlength="35"
+                [status]="password.dirty ? (password.invalid  ? 'danger' : 'success') : 'basic'"
                 [attr.aria-invalid]="password.invalid && password.touched ? true : null" required>
             <ng-container *ngIf="password.invalid && password.touched ">
                 <p class="caption status-danger" *ngIf="password.errors?.required">
                     Password is required!
-                </p>
-                <p class="caption status-danger" *ngIf="password.errors?.minlength || password.errors?.maxlength">
-                    Password should contain
-                    from 6
-                    to 35
-                    characters
                 </p>
             </ng-container>
         </div>

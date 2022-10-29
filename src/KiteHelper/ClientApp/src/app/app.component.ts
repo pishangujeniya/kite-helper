@@ -8,7 +8,6 @@ import { NbThemeService } from '@nebular/theme';
 })
 export class AppComponent implements OnInit {
   constructor(private themeService: NbThemeService) {
-    this.themeService.changeTheme('default');
   }
 
   ngOnInit(): void {

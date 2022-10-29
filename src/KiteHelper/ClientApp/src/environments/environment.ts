@@ -4,6 +4,8 @@
 
 export const environment = {
   production: false,
+  defaultErrorTitle: 'Sorry',
+  defaultErrorMessage: 'Something went wrong!',
 };
 
 /*

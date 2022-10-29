@@ -1,0 +1,18 @@
+{
+    "KiteHelperApi": {
+        "Kite": {
+            "Login": {
+                "Endpoint": "api/kite/login"
+            },
+            "Profile": {
+                "Endpoint": "api/kite/profile"
+            },
+            "TradingSymbols": {
+                "Endpoint": "api/kite/trading-symbols"
+            },
+            "HistoricalData": {
+                "Endpoint": "api/kite/historical-data"
+            }
+        }
+    }
+}

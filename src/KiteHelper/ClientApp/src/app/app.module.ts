@@ -1,6 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import {  NgModule } from '@angular/core';
+import {  APP_INITIALIZER, NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { ThemeModule } from './@theme/theme.module';
 import { AppComponent } from './app.component';
@@ -15,6 +15,9 @@ import {
   NbWindowModule,
 } from '@nebular/theme';
 import { NbAuthModule } from '@nebular/auth';
+import { ConfigService } from './services/config.service';
+
+const appInitializerFn = (appConfig: ConfigService) => () => appConfig.requestConfig();
 
 @NgModule({
   declarations: [
@@ -25,16 +28,24 @@ import { NbAuthModule } from '@nebular/auth';
     BrowserAnimationsModule,
     HttpClientModule,
     AppRoutingModule,
+    ThemeModule.forRoot(),
     NbSidebarModule.forRoot(),
     NbMenuModule.forRoot(),
     NbDatepickerModule.forRoot(),
     NbDialogModule.forRoot(),
     NbWindowModule.forRoot(),
     NbToastrModule.forRoot(),
-    ThemeModule.forRoot(),
     NbAuthModule.forRoot(),
   ],
-  providers: [],
+  providers: [
+    ConfigService,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: appInitializerFn,
+      multi: true,
+      deps: [ConfigService],
+    },
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule { }
