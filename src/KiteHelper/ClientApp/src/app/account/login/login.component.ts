@@ -7,6 +7,7 @@ import { RoutingServiceService } from 'src/app/services/routing-service.service'
 class UserNgModel {
   username: string;
   password: string;
+  appCode: number;
 }
 @Component({
   selector: 'app-login',

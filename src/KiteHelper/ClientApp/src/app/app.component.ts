@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { NbThemeService } from '@nebular/theme';
 
 @Component({
   selector: 'app-root',
@@ -6,7 +7,11 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
-  constructor() {}
+  constructor(private themeService: NbThemeService) {
+    this.themeService.changeTheme('default');
+  }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+
+  }
 }
