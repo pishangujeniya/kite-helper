@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32630.192
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KiteConnectSdk", "src\KiteConnectSdk\KiteConnectSdk.csproj", "{FE29BD75-414D-45B2-8BCB-D59643E26B59}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{1262DFC7-0BDC-44DD-A2B7-A13FBDEA39E9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KiteConnect", "src\dotnetkiteconnect\KiteConnect\KiteConnect.csproj", "{20E8F2E7-1816-4CAD-A68C-4CB786EDCC9D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KiteHelper", "src\KiteHelper\KiteHelper.csproj", "{B00AAD64-C5EE-4BCD-8778-17EDAA16C5E8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FE29BD75-414D-45B2-8BCB-D59643E26B59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE29BD75-414D-45B2-8BCB-D59643E26B59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE29BD75-414D-45B2-8BCB-D59643E26B59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE29BD75-414D-45B2-8BCB-D59643E26B59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20E8F2E7-1816-4CAD-A68C-4CB786EDCC9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20E8F2E7-1816-4CAD-A68C-4CB786EDCC9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20E8F2E7-1816-4CAD-A68C-4CB786EDCC9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20E8F2E7-1816-4CAD-A68C-4CB786EDCC9D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B00AAD64-C5EE-4BCD-8778-17EDAA16C5E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B00AAD64-C5EE-4BCD-8778-17EDAA16C5E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B00AAD64-C5EE-4BCD-8778-17EDAA16C5E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B00AAD64-C5EE-4BCD-8778-17EDAA16C5E8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FE29BD75-414D-45B2-8BCB-D59643E26B59} = {1262DFC7-0BDC-44DD-A2B7-A13FBDEA39E9}
+		{20E8F2E7-1816-4CAD-A68C-4CB786EDCC9D} = {1262DFC7-0BDC-44DD-A2B7-A13FBDEA39E9}
+		{B00AAD64-C5EE-4BCD-8778-17EDAA16C5E8} = {1262DFC7-0BDC-44DD-A2B7-A13FBDEA39E9}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9DFC327E-3B47-4ED2-B84A-B7E6798A2364}
+	EndGlobalSection
+EndGlobal

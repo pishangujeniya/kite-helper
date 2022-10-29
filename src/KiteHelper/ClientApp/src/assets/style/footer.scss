@@ -1,0 +1,8 @@
+@import '../../app/@theme/styles/themes.scss';
+
+@include nb-install-component() {
+    ::ng-deep nb-layout-footer nav {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+}

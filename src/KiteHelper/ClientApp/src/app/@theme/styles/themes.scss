@@ -1,0 +1,178 @@
+// @nebular theming framework
+@import "~@nebular/theme/styles/theming";
+// @nebular out of the box themes
+@import "~@nebular/theme/styles/themes";
+
+$nb-themes: nb-register-theme(
+  (
+    layout-padding-top: 2.25rem,
+
+    menu-item-icon-margin: 0 0.5rem 0 0,
+
+    card-height-tiny: 13.5rem,
+    card-height-small: 21.1875rem,
+    card-height-medium: 28.875rem,
+    card-height-large: 36.5625rem,
+    card-height-giant: 44.25rem,
+    card-margin-bottom: 1.875rem,
+    card-header-with-select-padding-top: 0.5rem,
+    card-header-with-select-padding-bottom: 0.5rem,
+
+    select-min-width: 6rem,
+
+    slide-out-background: #f7f9fc,
+    slide-out-shadow-color: 0 4px 14px 0 #8f9bb3,
+    slide-out-shadow-color-rtl: 0 4px 14px 0 #8f9bb3,
+  ),
+  default,
+  default
+);
+
+$nb-themes: nb-register-theme(
+  (
+    layout-padding-top: 2.25rem,
+
+    menu-item-icon-margin: 0 0.5rem 0 0,
+
+    card-height-tiny: 13.5rem,
+    card-height-small: 21.1875rem,
+    card-height-medium: 28.875rem,
+    card-height-large: 36.5625rem,
+    card-height-giant: 44.25rem,
+    card-margin-bottom: 1.875rem,
+    card-header-with-select-padding-top: 0.5rem,
+    card-header-with-select-padding-bottom: 0.5rem,
+
+    select-min-width: 6rem,
+
+    slide-out-background: #252547,
+    slide-out-shadow-color: 2px 0 3px #29157a,
+    slide-out-shadow-color-rtl: -2px 0 3px #29157a,
+  ),
+  cosmic,
+  cosmic
+);
+
+$nb-themes: nb-register-theme(
+  (
+    layout-padding-top: 2.25rem,
+
+    menu-item-icon-margin: 0 0.5rem 0 0,
+
+    card-height-tiny: 13.5rem,
+    card-height-small: 21.1875rem,
+    card-height-medium: 28.875rem,
+    card-height-large: 36.5625rem,
+    card-height-giant: 44.25rem,
+    card-margin-bottom: 1.875rem,
+    card-header-with-select-padding-top: 0.5rem,
+    card-header-with-select-padding-bottom: 0.5rem,
+
+    select-min-width: 6rem,
+
+    slide-out-background: linear-gradient(270deg, #edf1f7 0%, #e4e9f2 100%),
+    slide-out-shadow-color: 0 4px 14px 0 #8f9bb3,
+    slide-out-shadow-color-rtl: 0 4px 14px 0 #8f9bb3,
+  ),
+  corporate,
+  corporate
+);
+
+$nb-themes: nb-register-theme(
+  (
+    layout-padding-top: 2.25rem,
+
+    menu-item-icon-margin: 0 0.5rem 0 0,
+
+    card-height-tiny: 13.5rem,
+    card-height-small: 21.1875rem,
+    card-height-medium: 28.875rem,
+    card-height-large: 36.5625rem,
+    card-height-giant: 44.25rem,
+    card-margin-bottom: 1.875rem,
+    card-header-with-select-padding-top: 0.5rem,
+    card-header-with-select-padding-bottom: 0.5rem,
+
+    select-min-width: 6rem,
+
+    slide-out-background: linear-gradient(270deg, #222b45 0%, #151a30 100%),
+    slide-out-shadow-color: 0 4px 14px 0 #8f9bb3,
+    slide-out-shadow-color-rtl: 0 4px 14px 0 #8f9bb3,
+  ),
+  dark,
+  dark
+);
+
+// MY THEMES
+
+$nb-themes: nb-register-theme(
+  (
+    layout-padding-top: 2.25rem,
+
+    menu-item-icon-margin: 0 0.5rem 0 0,
+
+    card-height-tiny: 13.5rem,
+    card-height-small: 21.1875rem,
+    card-height-medium: 28.875rem,
+    card-height-large: 36.5625rem,
+    card-height-giant: 44.25rem,
+    card-margin-bottom: 1.875rem,
+    card-header-with-select-padding-top: 0.5rem,
+    card-header-with-select-padding-bottom: 0.5rem,
+
+    select-min-width: 6rem,
+
+    slide-out-background: #f7f9fc,
+    slide-out-shadow-color: 0 4px 14px 0 #8f9bb3,
+    slide-out-shadow-color-rtl: 0 4px 14px 0 #8f9bb3,
+
+    // Custom Theme Colors starts from here
+    color-primary-100: #fde4d4,
+    color-primary-200: #fbc2ab,
+    color-primary-300: #f4987f,
+    color-primary-400: #e96f5d,
+    color-primary-500: #db342c,
+    color-primary-600: #bc2026,
+    color-primary-700: #9d1626,
+    color-primary-800: #7f0e25,
+    color-primary-900: #690824,
+    color-success-100: #d5fad1,
+    color-success-200: #a4f5a5,
+    color-success-300: #73e37e,
+    color-success-400: #4cc765,
+    color-success-500: #1da345,
+    color-success-600: #158c44,
+    color-success-700: #0e7541,
+    color-success-800: #095e3b,
+    color-success-900: #054e37,
+    color-info-100: #d0e1fb,
+    color-info-200: #a3c2f8,
+    color-info-300: #729cec,
+    color-info-400: #4d79d9,
+    color-info-500: #1b4ac1,
+    color-info-600: #1338a5,
+    color-info-700: #0d298a,
+    color-info-800: #081c6f,
+    color-info-900: #05135c,
+    color-warning-100: #fef6cb,
+    color-warning-200: #feeb98,
+    color-warning-300: #fcdc65,
+    color-warning-400: #facd3e,
+    color-warning-500: #f7b500,
+    color-warning-600: #d49500,
+    color-warning-700: #b17800,
+    color-warning-800: #8f5d00,
+    color-warning-900: #764900,
+    color-danger-100: #fcded1,
+    color-danger-200: #fab7a5,
+    color-danger-300: #f18575,
+    color-danger-400: #e35752,
+    color-danger-500: #d11f28,
+    color-danger-600: #b3162c,
+    color-danger-700: #960f2e,
+    color-danger-800: #79092d,
+    color-danger-900: #64052c,
+  ),
+  kitehelper,
+  default
+);

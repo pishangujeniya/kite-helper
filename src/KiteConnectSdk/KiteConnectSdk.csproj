@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Authors>pishangujeniya</Authors>
+    <Description>Kite Connect SDK</Description>
+    <PackageProjectUrl>https://github.com/pishangujeniya/kite-helper</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/pishangujeniya/kite-helper.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>kite;kiteconnect;zerodha</PackageTags>
+    <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CsvHelper" Version="29.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\dotnetkiteconnect\KiteConnect\KiteConnect.csproj" />
+  </ItemGroup>
+
+</Project>
