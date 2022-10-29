@@ -1,0 +1,17 @@
+@import '~@nebular/theme/styles/global/breakpoints';
+@import '../../app/@theme/styles/themes.scss';
+
+@include nb-install-component() {
+
+    /* hide tooltips in phone */
+    @include media-breakpoint-down(lg) {
+        ::ng-deep nb-tooltip {
+            display: none !important;
+        }
+
+        ::ng-deep .nb-tooltip {
+            display: none !important;
+        }
+    }
+
+}

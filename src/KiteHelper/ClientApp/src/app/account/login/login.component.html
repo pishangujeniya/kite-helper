@@ -1,0 +1,59 @@
+<div class="col-lg-10" style="text-align: center;">
+    <h1 id="title" class="title">
+        <img class="site-logo" src="./../../../assets/images/icon.png" width="80" height="80" [routerLink]="['/']"
+            alt="Kite">
+    </h1>
+</div>
+
+<div class="col-lg-10">
+    <hr>
+</div>
+<form (ngSubmit)="login()" #form="ngForm" aria-labelledby="title">
+    <div class="col-lg-10">
+        <div class="form-control-group">
+            <label class="label" for="input-username">Username:</label>
+            <input nbInput fullWidth [(ngModel)]="user.username" #username="ngModel" name="username" id="input-username"
+                placeholder="Username" fieldSize="large" autofocus tabindex="1"
+                [status]="username.dirty ? (username.invalid  ? 'danger' : 'success') : ''"
+                [attr.aria-invalid]="username.invalid && username.touched ? true : null" required>
+            <ng-container *ngIf="username.invalid && username.touched">
+                <p class="caption status-danger" *ngIf="username.errors?.required">
+                    Username is required!
+                </p>
+            </ng-container>
+        </div>
+    </div>
+
+    <div class="col-lg-10">
+        <div class="form-control-group">
+            <span class="label-with-link">
+                <label class="label" for="input-password">Password:</label>
+            </span>
+            <input nbInput fullWidth [(ngModel)]="user.password" #password="ngModel" name="password" type="password"
+                id="input-password" placeholder="Password" fieldSize="large" tabindex="2"
+                [status]="password.dirty ? (password.invalid  ? 'danger' : 'success') : ''" minlength="6" maxlength="35"
+                [attr.aria-invalid]="password.invalid && password.touched ? true : null" required>
+            <ng-container *ngIf="password.invalid && password.touched ">
+                <p class="caption status-danger" *ngIf="password.errors?.required">
+                    Password is required!
+                </p>
+                <p class="caption status-danger" *ngIf="password.errors?.minlength || password.errors?.maxlength">
+                    Password should contain
+                    from 6
+                    to 35
+                    characters
+                </p>
+            </ng-container>
+        </div>
+    </div>
+
+
+
+    <div class="col-lg-10">
+        <button nbButton fullWidth status="primary" size="large" tabindex="3"
+            [disabled]="loginRequestSpinner || !form.valid" [nbSpinner]="loginRequestSpinner"
+            nbSpinnerStatus="primary">
+            Log In
+        </button>
+    </div>
+</form>

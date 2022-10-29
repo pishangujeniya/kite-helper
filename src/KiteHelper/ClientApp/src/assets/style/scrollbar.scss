@@ -1,0 +1,24 @@
+@import "../../app/@theme/styles/themes.scss";
+
+@mixin app-scrollbars() {
+    ::ng-deep ::-webkit-scrollbar {
+        width: nb-theme(scrollbar-width) !important;
+        height: 7px !important;
+    }
+
+    ::ng-deep ::-webkit-scrollbar-thumb {
+        background: nb-theme(color-primary-300) !important;
+        // background-color: red;
+        cursor: pointer !important;
+        border-radius: 5px !important;
+    }
+
+    ::ng-deep ::-webkit-scrollbar-track {
+        background: nb-theme(color-primary-100) !important;
+        // background-color: blue;
+    }
+}
+
+@include nb-install-component() {
+    @include app-scrollbars();
+}

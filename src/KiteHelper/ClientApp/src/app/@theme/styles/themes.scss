@@ -1,0 +1,162 @@
+// @nebular theming framework
+@import "~@nebular/theme/styles/theming";
+// @nebular out of the box themes
+@import "~@nebular/theme/styles/themes";
+
+$nb-themes: nb-register-theme((
+  layout-padding-top: 2.25rem,
+
+  menu-item-icon-margin: 0 0.5rem 0 0,
+
+  card-height-tiny: 13.5rem,
+  card-height-small: 21.1875rem,
+  card-height-medium: 28.875rem,
+  card-height-large: 36.5625rem,
+  card-height-giant: 44.25rem,
+  card-margin-bottom: 1.875rem,
+  card-header-with-select-padding-top: 0.5rem,
+  card-header-with-select-padding-bottom: 0.5rem,
+
+  select-min-width: 6rem,
+
+  slide-out-background: #f7f9fc,
+  slide-out-shadow-color: 0 4px 14px 0 #8f9bb3,
+  slide-out-shadow-color-rtl: 0 4px 14px 0 #8f9bb3,
+), default, default);
+
+$nb-themes: nb-register-theme((
+  layout-padding-top: 2.25rem,
+
+  menu-item-icon-margin: 0 0.5rem 0 0,
+
+  card-height-tiny: 13.5rem,
+  card-height-small: 21.1875rem,
+  card-height-medium: 28.875rem,
+  card-height-large: 36.5625rem,
+  card-height-giant: 44.25rem,
+  card-margin-bottom: 1.875rem,
+  card-header-with-select-padding-top: 0.5rem,
+  card-header-with-select-padding-bottom: 0.5rem,
+
+  select-min-width: 6rem,
+
+  slide-out-background: #252547,
+  slide-out-shadow-color: 2px 0 3px #29157a,
+  slide-out-shadow-color-rtl: -2px 0 3px #29157a,
+), cosmic, cosmic);
+
+$nb-themes: nb-register-theme((
+  layout-padding-top: 2.25rem,
+
+  menu-item-icon-margin: 0 0.5rem 0 0,
+
+  card-height-tiny: 13.5rem,
+  card-height-small: 21.1875rem,
+  card-height-medium: 28.875rem,
+  card-height-large: 36.5625rem,
+  card-height-giant: 44.25rem,
+  card-margin-bottom: 1.875rem,
+  card-header-with-select-padding-top: 0.5rem,
+  card-header-with-select-padding-bottom: 0.5rem,
+
+  select-min-width: 6rem,
+
+  slide-out-background: linear-gradient(270deg, #edf1f7 0%, #e4e9f2 100%),
+  slide-out-shadow-color: 0 4px 14px 0 #8f9bb3,
+  slide-out-shadow-color-rtl: 0 4px 14px 0 #8f9bb3,
+), corporate, corporate);
+
+$nb-themes: nb-register-theme((
+  layout-padding-top: 2.25rem,
+
+  menu-item-icon-margin: 0 0.5rem 0 0,
+
+  card-height-tiny: 13.5rem,
+  card-height-small: 21.1875rem,
+  card-height-medium: 28.875rem,
+  card-height-large: 36.5625rem,
+  card-height-giant: 44.25rem,
+  card-margin-bottom: 1.875rem,
+  card-header-with-select-padding-top: 0.5rem,
+  card-header-with-select-padding-bottom: 0.5rem,
+
+  select-min-width: 6rem,
+
+  slide-out-background: linear-gradient(270deg, #222b45 0%, #151a30 100%),
+  slide-out-shadow-color: 0 4px 14px 0 #8f9bb3,
+  slide-out-shadow-color-rtl: 0 4px 14px 0 #8f9bb3,
+), dark, dark);
+
+// MY THEMES
+
+$nb-themes: nb-register-theme(
+  (
+    layout-padding-top: 2.25rem,
+
+    menu-item-icon-margin: 0 0.5rem 0 0,
+
+    card-height-tiny: 13.5rem,
+    card-height-small: 21.1875rem,
+    card-height-medium: 28.875rem,
+    card-height-large: 36.5625rem,
+    card-height-giant: 44.25rem,
+    card-margin-bottom: 1.875rem,
+    card-header-with-select-padding-top: 0.5rem,
+    card-header-with-select-padding-bottom: 0.5rem,
+
+    select-min-width: 6rem,
+
+    slide-out-background: #f7f9fc,
+    slide-out-shadow-color: 0 4px 14px 0 #8f9bb3,
+    slide-out-shadow-color-rtl: 0 4px 14px 0 #8f9bb3,
+
+    // Custom Theme Colors starts from here
+    color-primary-100: #f5dff8,
+    color-primary-200: #e8c0f1,
+    color-primary-300: #c694d5,
+    color-primary-400: #996bac,
+    color-primary-500: #603a75,
+    color-primary-600: #4c2a64,
+    color-primary-700: #391d54,
+    color-primary-800: #291243,
+    color-primary-900: #1c0b38,
+    color-success-100: #c9f9cd,
+    color-success-200: #95f3a8,
+    color-success-300: #5cdc82,
+    color-success-400: #33ba68,
+    color-success-500: #058c48,
+    color-success-600: #037849,
+    color-success-700: #026446,
+    color-success-800: #015140,
+    color-success-900: #00433c,
+    color-info-100: #c7f9f1,
+    color-info-200: #92f4ec,
+    color-info-300: #59dfdf,
+    color-info-400: #30b5c0,
+    color-info-500: #007f96,
+    color-info-600: #006381,
+    color-info-700: #004a6c,
+    color-info-800: #003557,
+    color-info-900: #002648,
+    color-warning-100: #fdf2cc,
+    color-warning-200: #fbe19a,
+    color-warning-300: #f4c967,
+    color-warning-400: #eab041,
+    color-warning-500: #dd8c08,
+    color-warning-600: #be7005,
+    color-warning-700: #9f5804,
+    color-warning-800: #804102,
+    color-warning-900: #6a3201,
+    color-danger-100: #f9dfd0,
+    color-danger-200: #f3b9a4,
+    color-danger-300: #dc8570,
+    color-danger-400: #ba5448,
+    color-danger-500: #8c1c1a,
+    color-danger-600: #781319,
+    color-danger-700: #640d1a,
+    color-danger-800: #510819,
+    color-danger-900: #430419,
+  ),
+  app,
+  default
+);
