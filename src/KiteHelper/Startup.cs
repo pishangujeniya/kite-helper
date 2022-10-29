@@ -1,7 +1,7 @@
-﻿using System.Configuration;
-using System.Reflection;
+﻿using System.Reflection;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using KiteHelper.Filters;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Enrichers.Sensitive;
@@ -56,6 +56,7 @@ namespace KiteHelper
             services
                 .AddControllers(options =>
                 {
+                    options.Filters.Add<HttpResponseExceptionFilter>();
                 })
                 .AddJsonOptions(jsonOptions => { })
                 .ConfigureApiBehaviorOptions(x => { x.SuppressModelStateInvalidFilter = true; }
@@ -73,7 +74,7 @@ namespace KiteHelper
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseDeveloperExceptionPage();
-            
+
             app.UseHsts();
 
             app.UseStaticFiles();
@@ -87,8 +88,8 @@ namespace KiteHelper
 
             app.UseCors("MyCors");
 
-            app.UseAuthorization();
             app.UseAuthentication();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
@@ -105,7 +106,7 @@ namespace KiteHelper
                 endpoints.MapFallbackToFile("index.html");
             });
 
-            
+
 
 
         }

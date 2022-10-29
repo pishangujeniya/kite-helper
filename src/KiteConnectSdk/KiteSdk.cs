@@ -14,7 +14,7 @@ namespace KiteConnectSdk
     /// <summary>
     /// This class helps to convert the API calls from APIKey to Cookie based
     /// </summary>
-    public class KiteConnectSdk : Kite
+    public class KiteSdk : Kite
     {
         /**
          *
@@ -46,7 +46,7 @@ namespace KiteConnectSdk
         /// <summary>
         /// Default constructor, which sets the browser based _root url with a concatenation patch
         /// </summary>
-        public KiteConnectSdk() : base(string.Empty)
+        public KiteSdk() : base(string.Empty)
         {
             this._root = Constants.KiteBrowserApiRoot;
         }
@@ -396,13 +396,12 @@ namespace KiteConnectSdk
         /// Provides the Instruments CSV file into DataTable
         /// </summary>
         /// <returns></returns>
-        public async Task<System.Data.DataTable> GetInstrumentsCsv()
+        public static async Task<System.Data.DataTable> GetInstrumentsCsv()
         {
             using HttpClient httpClient = new HttpClient();
             Stream stream = await httpClient.GetStreamAsync(Constants.KiteInstrumentsCsvUrl);
             using StreamReader reader = new StreamReader(stream);
             using CsvReader csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-            // Do any configuration to `CsvReader` before creating CsvDataReader.
             using CsvDataReader dr = new CsvDataReader(csv);
             DataTable dt = new System.Data.DataTable();
             dt.Load(dr);
