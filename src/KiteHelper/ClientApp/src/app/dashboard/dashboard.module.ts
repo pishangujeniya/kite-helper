@@ -16,6 +16,7 @@ import { SharedModule } from './shared/shared.module';
     NbCardModule,
     NbIconModule,
     NbSpinnerModule,
+    SharedModule,
   ],
   declarations: [
     DashboardComponent,

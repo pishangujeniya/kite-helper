@@ -1,0 +1,70 @@
+<nb-card>
+    <nb-card-header>
+        <div class="row">
+            <div class="col-lg-7 col-md-7 col-sm-11">
+                <nb-icon icon="activity-outline"></nb-icon>
+                {{tradingSymbol}} - Download 
+            </div>
+        </div>
+    </nb-card-header>
+    <nb-card-body>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="form-control-group">
+                            <input nbInput [nbDatepicker]="startdatepicker" #startdatepickerInput required
+                                id="input-startdatepicker" placeholder="Start Date" fieldSize="medium"
+                                [(ngModel)]="startDate">
+                            <nb-datepicker #startdatepicker></nb-datepicker>
+                            <ng-container *ngIf="startdatepickerInput.invalid && startdatepickerInput.touched ">
+                                <p class="caption status-danger" *ngIf="startdatepickerInput.errors?.required">
+                                    Start date is required!
+                                </p>
+                            </ng-container>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="form-control-group">
+                            <input nbInput [nbDatepicker]="enddatepicker" #enddatepickerInput required
+                                id="input-enddatepicker" placeholder="End Date" fieldSize="medium"
+                                [(ngModel)]="endDate">
+                            <nb-datepicker #enddatepicker></nb-datepicker>
+                            <ng-container *ngIf="enddatepickerInput.invalid && enddatepickerInput.touched ">
+                                <p class="caption status-danger" *ngIf="enddatepickerInput.errors?.required">
+                                    End date required
+                                </p>
+                            </ng-container>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <nb-radio-group [(ngModel)]="interval" [(value)]="interval" id="intervalRadioGroup"
+                            #intervalRadioGroup="ngModel" name="intervalRadioGroup" required="true" class="d-flex">
+                            <nb-radio *ngFor="let option of intervals" [value]="option">
+                                {{ option }}
+                            </nb-radio>
+                        </nb-radio-group>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+
+    </nb-card-body>
+    <nb-card-footer>
+        <div class="row">
+            <div class="col-lg-12">
+                <button nbButton fullWidth status="success" size="large"
+                    [disabled]="downloadSpinner" [nbSpinner]="downloadSpinner"
+                    nbSpinnerStatus="primary">
+                    <nb-icon icon="download-outline"></nb-icon>
+                    Download
+                </button>
+            </div>
+        </div>
+    </nb-card-footer>
+</nb-card>

@@ -76,7 +76,7 @@ export class ThemeModule {
       providers: [
         ...NbThemeModule.forRoot(
           {
-            name: 'default',
+            name: 'kitehelper',
           },
           [
             DEFAULT_THEME,

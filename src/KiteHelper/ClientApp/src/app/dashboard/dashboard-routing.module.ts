@@ -15,6 +15,11 @@ const routes: Routes = [
           import('./users/users.module').then((m) => m.UsersModule),
       },
       {
+        path: 'historical',
+        loadChildren: () =>
+          import('./historical/historical.module').then((m) => m.HistoricalModule),
+      },
+      {
         path: '',
         redirectTo: 'users',
         pathMatch: 'full',

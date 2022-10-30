@@ -1,0 +1,8 @@
+.trading-symbol {
+    cursor: pointer;
+}
+
+.trading-symbol:hover {
+    box-shadow: 0 0.5em 0.5em -0.4em gray;
+    transform: translateY(-0.25em);
+}
