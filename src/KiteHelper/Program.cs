@@ -1,6 +1,7 @@
 
 using System.Diagnostics;
 using KiteHelper.Helpers;
+using KiteHelper.Infrastructure;
 using Serilog;
 
 namespace KiteHelper
@@ -11,11 +12,16 @@ namespace KiteHelper
         {
             Serilog.Debugging.SelfLog.Enable(msg => Debug.WriteLine(msg));
 
-            Console.WriteLine("Downloading Kite Instruments CSV");
-            // Getting KiteInstrumentsCsv in before starting the application
-            KiteInstruments.KiteInstrumentsCsv = await KiteConnectSdk.KiteSdk.GetInstrumentsCsv();
-
             IHost host = CreateHostBuilder(args).Build();
+
+            using (var scope = host.Services.CreateScope())
+            {
+                DatabaseContext? context = scope.ServiceProvider.GetService<DatabaseContext>();
+                if (context != null)
+                {
+                    await KiteInstrumentsHelper.LoadKiteInstrumentsCsv(context);
+                }
+            }
 
             await host.RunAsync();
         }

@@ -7,6 +7,8 @@ using KiteHelper.Domain.HistoricalData;
 using KiteHelper.Domain.Login;
 using KiteHelper.Domain.TradingSymbols;
 using KiteHelper.Helpers;
+using KiteHelper.Infrastructure;
+using KiteHelper.Infrastructure.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -16,11 +18,13 @@ namespace KiteHelper.Controllers
     [Route("api/kite")]
     public class KiteController : ControllerBase
     {
-        private ILogger<KiteController> _logger;
+        private readonly ILogger<KiteController> _logger;
+        private readonly DatabaseContext _databaseContext;
 
-        public KiteController(ILogger<KiteController> logger)
+        public KiteController(ILogger<KiteController> logger, DatabaseContext databaseContext)
         {
             _logger = logger;
+            _databaseContext = databaseContext;
         }
 
         [HttpPost]
@@ -74,17 +78,18 @@ namespace KiteHelper.Controllers
 
         [HttpGet]
         [Route("trading-symbols")]
-        [SwaggerResponse((int)HttpStatusCode.OK, type: typeof(List<string>))]
+        [SwaggerResponse((int)HttpStatusCode.OK, type: typeof(List<KiteInstrumentsEntity>))]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError)]
         public async Task<ActionResult> TradingSymbols([FromQuery()] TradingSymbolsRequestModel tradingSymbolsRequestModel)
         {
             tradingSymbolsRequestModel.exchange = tradingSymbolsRequestModel.exchange?.ToUpper() ?? string.Empty;
             tradingSymbolsRequestModel.tradingSymbol = tradingSymbolsRequestModel.tradingSymbol?.ToUpper() ?? string.Empty;
-            var result = KiteInstruments.KiteInstrumentsCsv?
-                .AsEnumerable()
-                .Where(myRow => string.IsNullOrWhiteSpace(tradingSymbolsRequestModel.exchange) || (myRow.Field<string>("exchange")?.ToUpper() == tradingSymbolsRequestModel.exchange))
-                .Where(myRow => string.IsNullOrWhiteSpace(tradingSymbolsRequestModel.tradingSymbol) || (myRow.Field<string>("tradingsymbol")?.ToUpper().Contains(tradingSymbolsRequestModel.tradingSymbol) ?? false))
-                .Select(myRow => myRow.Field<string>("tradingsymbol") ?? string.Empty).ToList();
+
+            var result = _databaseContext.KiteInstrumentsEntity
+                .Where(myRow => string.IsNullOrWhiteSpace(tradingSymbolsRequestModel.exchange) || (myRow.Exchange.ToUpper() == tradingSymbolsRequestModel.exchange))
+                .Where(myRow => string.IsNullOrWhiteSpace(tradingSymbolsRequestModel.tradingSymbol) || (myRow.TradingSymbol.ToUpper().Contains(tradingSymbolsRequestModel.tradingSymbol)))
+                .Select(myRow => myRow).ToList();
+
             Response.StatusCode = (int)HttpStatusCode.OK;
             return new JsonResult(result);
         }
@@ -101,11 +106,10 @@ namespace KiteHelper.Controllers
             historicalDataRequestModel.tradingSymbol = historicalDataRequestModel.tradingSymbol.ToUpper();
 
             // Getting instrument token from the trading symbol
-            var instrumentToken = KiteInstruments.KiteInstrumentsCsv?
-                    .AsEnumerable()
-                    .Where(myRow => (myRow.Field<string>("exchange")?.ToUpper() == historicalDataRequestModel.exchange))
-                    .Where(myRow => (myRow.Field<string>("tradingsymbol")?.ToUpper() == historicalDataRequestModel.tradingSymbol))
-                    .Select(myRow => myRow.Field<string>("instrument_token") ?? string.Empty).FirstOrDefault();
+            var instrumentToken = _databaseContext.KiteInstrumentsEntity
+                .Where(myRow => (myRow.Exchange.ToUpper() == historicalDataRequestModel.exchange))
+                .Where(myRow => (myRow.TradingSymbol.ToUpper() == historicalDataRequestModel.tradingSymbol))
+                .Select(myRow => myRow.InstrumentToken).FirstOrDefault();
 
             // Getting Historical Data
             var kiteSdk = KiteSessionHelper.GetKiteSdkFromSession(Request.Headers.Authorization);

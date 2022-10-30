@@ -2,6 +2,8 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using KiteHelper.Filters;
+using KiteHelper.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Enrichers.Sensitive;
@@ -49,6 +51,14 @@ namespace KiteHelper
                             .WithMethods("GET", "POST", "PUT", "DELETE");
                     });
             });
+
+            services.AddDbContext<DatabaseContext>(
+                options => options
+                    .UseInMemoryDatabase("KiteHelperDatabase", inMemoryOptions =>
+                    {
+                        inMemoryOptions.EnableNullChecks(true);
+                    })
+                , ServiceLifetime.Transient);
 
             services.AddControllersWithViews()
                 .AddJsonOptions(jsonOptions => { });
