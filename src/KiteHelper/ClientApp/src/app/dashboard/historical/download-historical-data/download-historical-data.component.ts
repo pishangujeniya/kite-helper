@@ -3,17 +3,17 @@ import { Component, Input, OnInit } from '@angular/core';
 @Component({
   selector: 'app-download-historical-data',
   templateUrl: './download-historical-data.component.html',
-  styleUrls: ['./download-historical-data.component.css']
+  styleUrls: ['./download-historical-data.component.css'],
 })
 export class DownloadHistoricalDataComponent implements OnInit {
 
 
   @Input() public tradingSymbol: string;
 
-  public intervals = ["minute", "5minute", "10minute", "15minute", "day"]
+  public intervals = ['minute', '5minute', '10minute', '15minute', 'day'];
 
 
-  
+
 
   public startDate: Date;
   public endDate: Date;

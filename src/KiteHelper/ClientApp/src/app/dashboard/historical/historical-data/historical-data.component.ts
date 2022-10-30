@@ -21,7 +21,7 @@ export class HistoricalDataComponent implements OnInit {
   constructor(
     private kiteApiService: KiteApiService,
     private toastrService: NbToastrService,
-    private dialogService: NbDialogService
+    private dialogService: NbDialogService,
   ) { }
 
   ngOnInit(): void {
