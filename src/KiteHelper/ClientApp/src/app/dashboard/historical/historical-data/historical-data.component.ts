@@ -1,7 +1,7 @@
 import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { NbDialogService, NbToastrService } from '@nebular/theme';
-import { KiteApiService } from 'src/app/services/api/kite-api.service';
+import { KiteApiService, TradingSymolsResponseModel } from 'src/app/services/api/kite-api.service';
 import { environment } from 'src/environments/environment';
 import { DownloadHistoricalDataComponent } from '../download-historical-data/download-historical-data.component';
 
@@ -16,7 +16,7 @@ export class HistoricalDataComponent implements OnInit {
 
   public tradingSymbol: string;
 
-  public filteredOptions: Array<string>;
+  public filteredOptions: Array<TradingSymolsResponseModel>;
 
   constructor(
     private kiteApiService: KiteApiService,
@@ -25,7 +25,7 @@ export class HistoricalDataComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.filteredOptions = new Array<string>();
+    this.filteredOptions = new Array<TradingSymolsResponseModel>();
   }
 
   public onTradingSymbolChange() {
@@ -33,18 +33,17 @@ export class HistoricalDataComponent implements OnInit {
     if (searchedSymbol.length > 2) {
       this.loadTradingSymbolsList(searchedSymbol);
     } else {
-      this.filteredOptions = [];
+      this.filteredOptions = new Array<TradingSymolsResponseModel>();
     }
   }
 
   public loadTradingSymbolsList(searchedSymbol: string) {
     this.kiteApiService.tradingSymbols(
       {
-        exchange: '',
         tradingSymbol: searchedSymbol,
       }).toPromise()
       .then(
-        (getInstrumentsTradingSymbolResponseModel: HttpResponse<Array<string>>) => {
+        (getInstrumentsTradingSymbolResponseModel: HttpResponse<Array<TradingSymolsResponseModel>>) => {
           this.filteredOptions = getInstrumentsTradingSymbolResponseModel.body;
         }, (errorResponse: HttpErrorResponse) => {
           console.error(errorResponse);

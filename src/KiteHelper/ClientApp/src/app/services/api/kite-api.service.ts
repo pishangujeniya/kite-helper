@@ -45,11 +45,10 @@ export class KiteApiService {
     ).pipe();
   }
 
-  public tradingSymbols(request: TradingSymbolsRequestModel): Observable<HttpResponse<Array<string>>> {
+  public tradingSymbols(request: TradingSymbolsRequestModel): Observable<HttpResponse<Array<TradingSymolsResponseModel>>> {
     let httpParam = new HttpParams();
-    httpParam = httpParam.append('exchange', request.exchange);
     httpParam = httpParam.append('tradingSymbol', request.tradingSymbol);
-    return this.httpClient.get<Array<string>>(
+    return this.httpClient.get<Array<TradingSymolsResponseModel>>(
       this.baseUrl + this.configService.getConfig().KiteHelperApi.Kite.TradingSymbols.Endpoint,
       {
         headers: new HttpHeaders({
@@ -104,10 +103,24 @@ export class ProfileResponseModel {
 }
 
 export class TradingSymbolsRequestModel {
-  exchange: string;
   tradingSymbol: string;
 }
 
+export class TradingSymolsResponseModel {
+  id: number;
+  instrumentToken: string;
+  exchangeToken: string;
+  tradingSymbol: string;
+  name: string;
+  lastPrice: number;
+  expiry?: Date;
+  strike: string;
+  tickSize: number;
+  lotSize: number;
+  instrumentType: string;
+  segment: string;
+  exchange: string;
+}
 export class HistoricalDataRequestModel {
   exchange: string;
   tradingSymbol: string;
