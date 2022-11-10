@@ -1,8 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
-import { CookieService } from 'ngx-cookie-service';
 import { Observable } from 'rxjs';
 import { ConfigService } from '../config.service';
+import { CookieHelperService } from '../cookie-helper.service';
+import { HelperService } from '../helper.service';
 
 @Injectable({
   providedIn: 'root',
@@ -12,13 +13,14 @@ export class KiteApiService {
   private baseUrl: string;
   constructor(
     private configService: ConfigService,
-    private cookieService: CookieService,
+    private cookieHelperService: CookieHelperService,
+    private helperService: HelperService,
     private httpClient: HttpClient, @Inject('BASE_URL') baseUrl: string) {
     this.baseUrl = baseUrl;
   }
 
-  public login(request: KiteLoginRequestModel): Observable<HttpResponse<string>> {
-    return this.httpClient.post<string>(
+  public login(request: KiteLoginRequestModel): Observable<HttpResponse<KiteLoginResponseModel>> {
+    return this.httpClient.post<KiteLoginResponseModel>(
       this.baseUrl + this.configService.getConfig().KiteHelperApi.Kite.Login.Endpoint,
       JSON.stringify(request),
       {
@@ -36,7 +38,7 @@ export class KiteApiService {
       this.baseUrl + this.configService.getConfig().KiteHelperApi.Kite.Profile.Endpoint,
       {
         headers: new HttpHeaders({
-          Authorization: this.cookieService.get('Authorization'),
+          Authorization: this.cookieHelperService.getAuthorizationToken(),
           observe: 'response',
           'Content-Type': 'application/json',
         }),
@@ -45,14 +47,14 @@ export class KiteApiService {
     ).pipe();
   }
 
-  public tradingSymbols(request: TradingSymbolsRequestModel): Observable<HttpResponse<Array<TradingSymolsResponseModel>>> {
+  public tradingSymbols(request: TradingSymbolsRequestModel): Observable<HttpResponse<Array<TradingSymbolResponseModel>>> {
     let httpParam = new HttpParams();
-    httpParam = httpParam.append('tradingSymbol', request.tradingSymbol);
-    return this.httpClient.get<Array<TradingSymolsResponseModel>>(
+    httpParam = httpParam.append('TradingSymbol', request.TradingSymbol);
+    return this.httpClient.get<Array<TradingSymbolResponseModel>>(
       this.baseUrl + this.configService.getConfig().KiteHelperApi.Kite.TradingSymbols.Endpoint,
       {
         headers: new HttpHeaders({
-          Authorization: this.cookieService.get('Authorization'),
+          Authorization: this.cookieHelperService.getAuthorizationToken(),
           observe: 'response',
           'Content-Type': 'application/json',
         }),
@@ -62,32 +64,39 @@ export class KiteApiService {
     ).pipe();
   }
 
-  public historicalData(request: HistoricalDataRequestModel): Observable<HttpResponse<Array<string>>> {
-    let httpParam = new HttpParams();
-    httpParam = httpParam.append('exchange', request.exchange);
-    httpParam = httpParam.append('tradingSymbol', request.tradingSymbol);
-    httpParam = httpParam.append('startDateTime', request.startDateTime.toUTCString());
-    httpParam = httpParam.append('endDateTime', request.endDateTime.toUTCString());
-    httpParam = httpParam.append('interval', request.interval);
-    return this.httpClient.get<Array<string>>(
-      this.baseUrl + this.configService.getConfig().KiteHelperApi.Kite.TradingSymbols.Endpoint,
+  public historicalData(request: HistoricalDataRequestModel): Observable<HttpResponse<Array<HistoricalDataResponseModel>>> {
+
+    const reqBody = {
+      Exchange: request.Exchange,
+      TradingSymbol: request.TradingSymbol,
+      StartDateTime: request.StartDateTime.toISOString(),
+      EndDateTime: request.EndDateTime.toISOString(),
+      Interval: request.Interval,
+    };
+
+    return this.httpClient.post<Array<HistoricalDataResponseModel>>(
+      this.baseUrl + this.configService.getConfig().KiteHelperApi.Kite.HistoricalData.Endpoint,
+      JSON.stringify(reqBody),
       {
         headers: new HttpHeaders({
-          Authorization: this.cookieService.get('Authorization'),
+          Authorization: this.cookieHelperService.getAuthorizationToken(),
           observe: 'response',
           'Content-Type': 'application/json',
         }),
         observe: 'response',
-        params: httpParam,
       },
     ).pipe();
   }
 }
 
 export class KiteLoginRequestModel {
-  userName: string;
-  password: string;
-  appCode: number;
+  UserName: string;
+  Password: string;
+  AppCode: number;
+}
+
+export class KiteLoginResponseModel {
+  SessionId: string;
 }
 
 export class ProfileResponseModel {
@@ -103,28 +112,38 @@ export class ProfileResponseModel {
 }
 
 export class TradingSymbolsRequestModel {
-  tradingSymbol: string;
+  TradingSymbol: string;
 }
 
-export class TradingSymolsResponseModel {
-  id: number;
-  instrumentToken: string;
-  exchangeToken: string;
-  tradingSymbol: string;
-  name: string;
-  lastPrice: number;
-  expiry?: Date;
-  strike: string;
-  tickSize: number;
-  lotSize: number;
-  instrumentType: string;
-  segment: string;
-  exchange: string;
+export class TradingSymbolResponseModel {
+  Id: number;
+  InstrumentToken: string;
+  ExchangeToken: string;
+  TradingSymbol: string;
+  Name: string;
+  LastPrice: number;
+  Expiry?: Date;
+  Strike: string;
+  TickSize: number;
+  LotSize: number;
+  InstrumentType: string;
+  Segment: string;
+  Exchange: string;
 }
 export class HistoricalDataRequestModel {
-  exchange: string;
-  tradingSymbol: string;
-  startDateTime: Date;
-  endDateTime: Date;
-  interval: 'minute' | '5minute' | '10minute' | '15minute' | 'day' | string;
+  Exchange: string;
+  TradingSymbol: string;
+  StartDateTime: Date;
+  EndDateTime: Date;
+  Interval: 'minute' | '5minute' | '10minute' | '15minute' | 'day' | string;
+}
+
+export class HistoricalDataResponseModel {
+  TimeStamp: string;
+  Open: number;
+  High: number;
+  Low: number;
+  Close: number;
+  Volume: number;
+  OI: number;
 }

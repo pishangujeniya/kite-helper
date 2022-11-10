@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Net;
+using System.Text;
 using KiteConnect;
 using KiteConnectSdk;
 using KiteHelper.Attributes;
@@ -44,7 +45,7 @@ namespace KiteHelper.Controllers
                     if (!string.IsNullOrWhiteSpace(sessionId))
                     {
                         Response.StatusCode = (int)HttpStatusCode.OK;
-                        return new JsonResult(sessionId);
+                        return new JsonResult(new KiteLoginResponseModel() { SessionId = sessionId });
                     }
                     else
                     {
@@ -82,40 +83,61 @@ namespace KiteHelper.Controllers
         [SwaggerResponse((int)HttpStatusCode.InternalServerError)]
         public async Task<ActionResult> TradingSymbols([FromQuery()] TradingSymbolsRequestModel tradingSymbolsRequestModel)
         {
-            tradingSymbolsRequestModel.tradingSymbol = tradingSymbolsRequestModel.tradingSymbol?.ToUpper() ?? string.Empty;
+            tradingSymbolsRequestModel.TradingSymbol = tradingSymbolsRequestModel.TradingSymbol?.ToUpper() ?? string.Empty;
 
             var result = _databaseContext.KiteInstrumentsEntity
-                .Where(myRow => string.IsNullOrWhiteSpace(tradingSymbolsRequestModel.tradingSymbol) || (myRow.TradingSymbol.ToUpper().Contains(tradingSymbolsRequestModel.tradingSymbol)))
-                .OrderBy(myRow=> myRow.Expiry)
+                .Where(myRow => string.IsNullOrWhiteSpace(tradingSymbolsRequestModel.TradingSymbol) || (myRow.TradingSymbol.ToUpper().Contains(tradingSymbolsRequestModel.TradingSymbol)))
+                .OrderBy(myRow => myRow.Expiry)
                 .Select(myRow => myRow).ToList();
 
             Response.StatusCode = (int)HttpStatusCode.OK;
             return new JsonResult(result);
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("historical-data")]
         [SwaggerResponse((int)HttpStatusCode.OK, type: typeof(List<Historical>))]
         [SwaggerResponse((int)HttpStatusCode.Unauthorized)]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError)]
         [KiteAuthorize]
-        public async Task<ActionResult> HistoricalData([FromQuery] HistoricalDataRequestModel historicalDataRequestModel)
+        public async Task<ActionResult> HistoricalData([FromBody] HistoricalDataRequestModel historicalDataRequestModel)
         {
-            historicalDataRequestModel.exchange = historicalDataRequestModel.exchange.ToUpper();
-            historicalDataRequestModel.tradingSymbol = historicalDataRequestModel.tradingSymbol.ToUpper();
+            historicalDataRequestModel.Exchange = historicalDataRequestModel.Exchange.ToUpper();
+            historicalDataRequestModel.TradingSymbol = historicalDataRequestModel.TradingSymbol.ToUpper();
 
             // Getting instrument token from the trading symbol
             var instrumentToken = _databaseContext.KiteInstrumentsEntity
-                .Where(myRow => (myRow.Exchange.ToUpper() == historicalDataRequestModel.exchange))
-                .Where(myRow => (myRow.TradingSymbol.ToUpper() == historicalDataRequestModel.tradingSymbol))
+                .Where(myRow => (myRow.Exchange.ToUpper() == historicalDataRequestModel.Exchange))
+                .Where(myRow => (myRow.TradingSymbol.ToUpper() == historicalDataRequestModel.TradingSymbol))
                 .Select(myRow => myRow.InstrumentToken).FirstOrDefault();
 
             // Getting Historical Data
             var kiteSdk = KiteSessionHelper.GetKiteSdkFromSession(Request.Headers.Authorization);
-            var result = kiteSdk?.GetHistoricalData(instrumentToken, historicalDataRequestModel.startDateTime, historicalDataRequestModel.endDateTime, historicalDataRequestModel.interval, false, true);
+
+            List<Historical> result = new List<Historical>();
+            foreach (var dateRange in SplitDateRange(historicalDataRequestModel.StartDateTime, historicalDataRequestModel.EndDateTime,50))
+            {
+                var chunk = kiteSdk?.GetHistoricalData(instrumentToken, dateRange.Item1.ToLocalTime(), dateRange.Item2.ToLocalTime(), historicalDataRequestModel.Interval, false, true);
+                if (chunk != null)
+                {
+                    result.AddRange(chunk);
+                }
+            }
 
             Response.StatusCode = (int)HttpStatusCode.OK;
             return new JsonResult(result);
+
+
+            IEnumerable<Tuple<DateTime, DateTime>> SplitDateRange(DateTime start, DateTime end, int dayChunkSize)
+            {
+                DateTime chunkEnd;
+                while ((chunkEnd = start.AddDays(dayChunkSize)) < end)
+                {
+                    yield return Tuple.Create(start, chunkEnd);
+                    start = chunkEnd;
+                }
+                yield return Tuple.Create(start, end);
+            }
         }
     }
 }

@@ -4,6 +4,6 @@ namespace KiteHelper.Domain.TradingSymbols
 {
     public class TradingSymbolsRequestModel
     {
-        [FromQuery(Name = "tradingSymbol")] public string tradingSymbol { get; set; }
+        [FromQuery(Name = "TradingSymbol")] public string TradingSymbol { get; set; }
     }
 }

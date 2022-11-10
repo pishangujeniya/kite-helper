@@ -1,7 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import {  APP_INITIALIZER, NgModule } from '@angular/core';
-import { HttpClientModule } from '@angular/common/http';
+import { APP_INITIALIZER, Injector, NgModule } from '@angular/core';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { ThemeModule } from './@theme/theme.module';
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
@@ -11,14 +11,19 @@ import {
   NbDialogModule,
   NbMenuModule,
   NbSidebarModule,
-  NbThemeModule,
+  NbTimepickerModule,
   NbToastrModule,
   NbWindowModule,
 } from '@nebular/theme';
 import { NbAuthModule } from '@nebular/auth';
 import { ConfigService } from './services/config.service';
+import { UnauthorizedInterceptor } from './interceptors/unauthorized.interceptor';
 
 const appInitializerFn = (appConfig: ConfigService) => () => appConfig.requestConfig();
+
+export function authInterceptorFactory(injector: Injector) {
+  return new UnauthorizedInterceptor(injector);
+}
 
 @NgModule({
   declarations: [
@@ -33,6 +38,7 @@ const appInitializerFn = (appConfig: ConfigService) => () => appConfig.requestCo
     NbSidebarModule.forRoot(),
     NbMenuModule.forRoot(),
     NbDatepickerModule.forRoot(),
+    NbTimepickerModule.forRoot(),
     NbDialogModule.forRoot(),
     NbWindowModule.forRoot(),
     NbToastrModule.forRoot(),
@@ -45,6 +51,13 @@ const appInitializerFn = (appConfig: ConfigService) => () => appConfig.requestCo
       useFactory: appInitializerFn,
       multi: true,
       deps: [ConfigService],
+    },
+    UnauthorizedInterceptor,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useFactory: authInterceptorFactory,
+      multi: true,
+      deps: [Injector, UnauthorizedInterceptor],
     },
   ],
   bootstrap: [AppComponent],

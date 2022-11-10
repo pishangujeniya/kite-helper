@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 @Injectable({
   providedIn: 'root',
 })
-export class RoutingServiceService {
+export class RoutingHelperService {
 
   constructor(private router: Router) { }
 
@@ -13,6 +13,10 @@ export class RoutingServiceService {
   }
 
   public navigateToLogin() {
-    this.router.navigate(['/']);
+    this.router.navigate(['/account/login']);
+  }
+
+  public navigateToLogout() {
+    this.router.navigate(['/account/logout']);
   }
 }

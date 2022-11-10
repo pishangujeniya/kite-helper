@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpBackend, HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
 @Injectable({
@@ -8,7 +8,11 @@ export class ConfigService {
 
   private config: Config;
 
-  constructor(private httpClient: HttpClient) { }
+  private httpClient: HttpClient;
+
+  constructor(private handler: HttpBackend) {
+    this.httpClient = new HttpClient(handler);
+  }
 
   public async requestConfig() {
     return this.httpClient.get('/config.json').toPromise()

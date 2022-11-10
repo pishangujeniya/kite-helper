@@ -4,13 +4,13 @@ namespace KiteHelper.Domain.Login
 {
     public class KiteLoginRequestModel
     {
-        [JsonPropertyName("userName")]
+        [JsonPropertyName("UserName")]
         public string UserName { get; set; }
 
-        [JsonPropertyName("password")]
+        [JsonPropertyName("Password")]
         public string Password { get; set; }
 
-        [JsonPropertyName("appCode")]
+        [JsonPropertyName("AppCode")]
         public int AppCode { get; set; }
     }
 }

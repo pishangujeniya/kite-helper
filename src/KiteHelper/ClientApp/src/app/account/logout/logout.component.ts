@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { CookieHelperService } from 'src/app/services/cookie-helper.service';
+import { RoutingHelperService } from 'src/app/services/routing-helper.service';
 
 @Component({
   selector: 'app-logout',
@@ -8,6 +10,8 @@ import { Component, OnInit } from '@angular/core';
 export class LogoutComponent implements OnInit {
 
   constructor(
+    private cookieHelperService: CookieHelperService,
+    private routingHelperService: RoutingHelperService,
   ) {
   }
 
@@ -16,7 +20,9 @@ export class LogoutComponent implements OnInit {
   }
 
   private logout(): void {
+    this.cookieHelperService.logout();
     localStorage.clear();
     sessionStorage.clear();
+    this.routingHelperService.navigateToLogin();
   }
 }

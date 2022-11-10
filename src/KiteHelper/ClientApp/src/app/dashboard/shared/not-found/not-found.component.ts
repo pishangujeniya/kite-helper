@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { RoutingServiceService } from 'src/app/services/routing-service.service';
+import { RoutingHelperService } from 'src/app/services/routing-helper.service';
 
 @Component({
   selector: 'app-not-found',
@@ -9,7 +9,7 @@ import { RoutingServiceService } from 'src/app/services/routing-service.service'
 export class NotFoundComponent {
 
   constructor(
-    private routingService: RoutingServiceService,
+    private routingService: RoutingHelperService,
   ) { }
 
   navigateToLogin() {
