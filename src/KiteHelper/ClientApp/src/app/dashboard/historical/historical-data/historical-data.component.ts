@@ -1,7 +1,7 @@
 import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { NbDialogService, NbToastrService } from '@nebular/theme';
-import { KiteApiService, TradingSymolsResponseModel } from 'src/app/services/api/kite-api.service';
+import { KiteApiService, TradingSymbolResponseModel } from 'src/app/services/api/kite-api.service';
 import { environment } from 'src/environments/environment';
 import { DownloadHistoricalDataComponent } from '../download-historical-data/download-historical-data.component';
 
@@ -16,7 +16,7 @@ export class HistoricalDataComponent implements OnInit {
 
   public tradingSymbol: string;
 
-  public filteredOptions: Array<TradingSymolsResponseModel>;
+  public filteredOptions: Array<TradingSymbolResponseModel>;
 
   constructor(
     private kiteApiService: KiteApiService,
@@ -25,7 +25,7 @@ export class HistoricalDataComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.filteredOptions = new Array<TradingSymolsResponseModel>();
+    this.filteredOptions = new Array<TradingSymbolResponseModel>();
   }
 
   public onTradingSymbolChange() {
@@ -33,17 +33,17 @@ export class HistoricalDataComponent implements OnInit {
     if (searchedSymbol.length > 2) {
       this.loadTradingSymbolsList(searchedSymbol);
     } else {
-      this.filteredOptions = new Array<TradingSymolsResponseModel>();
+      this.filteredOptions = new Array<TradingSymbolResponseModel>();
     }
   }
 
   public loadTradingSymbolsList(searchedSymbol: string) {
     this.kiteApiService.tradingSymbols(
       {
-        tradingSymbol: searchedSymbol,
+        TradingSymbol: searchedSymbol,
       }).toPromise()
       .then(
-        (getInstrumentsTradingSymbolResponseModel: HttpResponse<Array<TradingSymolsResponseModel>>) => {
+        (getInstrumentsTradingSymbolResponseModel: HttpResponse<Array<TradingSymbolResponseModel>>) => {
           this.filteredOptions = getInstrumentsTradingSymbolResponseModel.body;
         }, (errorResponse: HttpErrorResponse) => {
           console.error(errorResponse);
@@ -62,8 +62,14 @@ export class HistoricalDataComponent implements OnInit {
       );
   }
 
-  public selectedTradingSymbol(option: any) {
-    this.dialogService.open(DownloadHistoricalDataComponent, { hasBackdrop: true });
+  public selectedTradingSymbol(option: TradingSymbolResponseModel) {
+    this.dialogService.open(DownloadHistoricalDataComponent,
+      {
+        hasBackdrop: true,
+        context: {
+          tradingSymbolResponseModel: option,
+        },
+      });
   }
 
   onSelectionChange($event) {

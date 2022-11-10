@@ -23,8 +23,8 @@
         <hr>
         <div class="row">
             <div class="col-lg-3 col-md-3" *ngFor="let option of filteredOptions; let ci = index">
-                <app-trading-symbol [tradingSymbol]="option.tradingSymbol" [name]="option.name" [expiry]="option.expiry"
-                    [instrumentType]="option.instrumentType" [exchange]="option.exchange" [strike]="option.strike"
+                <app-trading-symbol [tradingSymbol]="option.TradingSymbol" [name]="option.Name" [expiry]="option.Expiry"
+                    [instrumentType]="option.InstrumentType" [exchange]="option.Exchange" [strike]="option.Strike"
                     (click)="selectedTradingSymbol(option)">
                 </app-trading-symbol>
             </div>

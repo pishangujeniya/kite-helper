@@ -1,13 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace KiteHelper.Domain.HistoricalData
 {
     public class HistoricalDataRequestModel
     {
-        [FromQuery(Name = "exchange")] public string exchange { get; set; }
-        [FromQuery(Name = "tradingSymbol")] public string tradingSymbol { get; set; }
-        [FromQuery(Name = "startDateTime")] public DateTime startDateTime { get; set; }
-        [FromQuery(Name = "endDateTime")] public DateTime endDateTime { get; set; }
-        [FromQuery(Name = "interval")] public string interval { get; set; }
+        [JsonPropertyName("Exchange")] public string Exchange { get; set; }
+        [JsonPropertyName("TradingSymbol")] public string TradingSymbol { get; set; }
+        [JsonPropertyName("StartDateTime")] public DateTime StartDateTime { get; set; }
+        [JsonPropertyName("EndDateTime")] public DateTime EndDateTime { get; set; }
+        [JsonPropertyName("Interval")] public string Interval { get; set; }
     }
 }

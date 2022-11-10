@@ -10,11 +10,6 @@ const routes: Routes = [
     component: DashboardComponent,
     children: [
       {
-        path: 'users',
-        loadChildren: () =>
-          import('./users/users.module').then((m) => m.UsersModule),
-      },
-      {
         path: 'historical',
         loadChildren: () =>
           import('./historical/historical.module').then((m) => m.HistoricalModule),
