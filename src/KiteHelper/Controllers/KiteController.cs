@@ -82,12 +82,11 @@ namespace KiteHelper.Controllers
         [SwaggerResponse((int)HttpStatusCode.InternalServerError)]
         public async Task<ActionResult> TradingSymbols([FromQuery()] TradingSymbolsRequestModel tradingSymbolsRequestModel)
         {
-            tradingSymbolsRequestModel.exchange = tradingSymbolsRequestModel.exchange?.ToUpper() ?? string.Empty;
             tradingSymbolsRequestModel.tradingSymbol = tradingSymbolsRequestModel.tradingSymbol?.ToUpper() ?? string.Empty;
 
             var result = _databaseContext.KiteInstrumentsEntity
-                .Where(myRow => string.IsNullOrWhiteSpace(tradingSymbolsRequestModel.exchange) || (myRow.Exchange.ToUpper() == tradingSymbolsRequestModel.exchange))
                 .Where(myRow => string.IsNullOrWhiteSpace(tradingSymbolsRequestModel.tradingSymbol) || (myRow.TradingSymbol.ToUpper().Contains(tradingSymbolsRequestModel.tradingSymbol)))
+                .OrderBy(myRow=> myRow.Expiry)
                 .Select(myRow => myRow).ToList();
 
             Response.StatusCode = (int)HttpStatusCode.OK;

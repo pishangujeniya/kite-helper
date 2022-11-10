@@ -11,9 +11,8 @@
         <div class="row">
             <div class="offset-3 col-lg-6 offset-3">
                 <input #tradingSymbolInput fullWidth nbInput type="text" (input)="onTradingSymbolChange()"
-                    [(ngModel)]="tradingSymbol" placeholder="Trading Symbol"
-                     /> 
-                     <!-- [nbAutocomplete]="tradingSymbolAutoComplete" -->
+                    [(ngModel)]="tradingSymbol" placeholder="Trading Symbol" />
+                <!-- [nbAutocomplete]="tradingSymbolAutoComplete" -->
                 <!-- <nb-autocomplete #tradingSymbolAutoComplete (selectedChange)="onSelectionChange($event)">
                     <nb-option *ngFor="let option of filteredOptions; let ci = index" value="{{option}}">
                         {{ option }}
@@ -24,7 +23,10 @@
         <hr>
         <div class="row">
             <div class="col-lg-3 col-md-3" *ngFor="let option of filteredOptions; let ci = index">
-                <app-trading-symbol [tradingSymbol]="option" (click)="selectedTradingSymbol(option)"></app-trading-symbol>
+                <app-trading-symbol [tradingSymbol]="option.tradingSymbol" [name]="option.name" [expiry]="option.expiry"
+                    [instrumentType]="option.instrumentType" [exchange]="option.exchange" [strike]="option.strike"
+                    (click)="selectedTradingSymbol(option)">
+                </app-trading-symbol>
             </div>
         </div>
 

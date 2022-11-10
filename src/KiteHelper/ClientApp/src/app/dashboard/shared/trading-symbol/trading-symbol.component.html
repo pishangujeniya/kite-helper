@@ -7,8 +7,21 @@
         </div>
     </nb-card-header>
     <nb-card-body>
-        <p style="color: gray;">RELIANCE</p>
-        <p>27-10-2022</p>
-        <p style="color:blue">MCX</p>
+        <div class="row">
+            <div class="col-lg-12">
+                <h6 style="color: gray;">{{name}}</h6>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-8">
+                <p>{{expiryDate | date }}</p>
+                <h6 [className]="instrumentType">{{instrumentType}} {{strike}}</h6>
+            </div>
+            <div class="col-lg-4">
+                <h5 [className]="exchange" >{{exchange}}</h5>
+            </div>
+        </div>
+
+
     </nb-card-body>
 </nb-card>
