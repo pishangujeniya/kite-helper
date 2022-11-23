@@ -9,6 +9,7 @@ import {
   NbButtonModule,
   NbCardModule,
   NbCheckboxModule,
+  NbDialogService,
   NbIconModule,
   NbInputModule,
   NbLayoutModule,
@@ -21,6 +22,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { NbAuthModule } from '@nebular/auth';
 import { LogoutComponent } from './logout/logout.component';
+import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -45,6 +47,7 @@ import { LogoutComponent } from './logout/logout.component';
     NbAuthModule,
     NbTooltipModule,
     NbToastrModule,
+    SharedModule,
   ],
 })
 export class AccountModule { }

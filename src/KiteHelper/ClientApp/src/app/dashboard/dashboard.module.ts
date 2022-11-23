@@ -4,7 +4,7 @@ import { NbCardModule, NbIconModule, NbMenuModule, NbSpinnerModule } from '@nebu
 import { ThemeModule } from '../@theme/theme.module';
 import { DashboardComponent } from './dashboard.component';
 import { DashboardRoutingModule } from './dashboard-routing.module';
-import { SharedModule } from './shared/shared.module';
+import { SharedModule } from '../shared/shared.module';
 
 
 @NgModule({
@@ -16,7 +16,6 @@ import { SharedModule } from './shared/shared.module';
     NbCardModule,
     NbIconModule,
     NbSpinnerModule,
-    SharedModule,
   ],
   declarations: [
     DashboardComponent,

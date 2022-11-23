@@ -6,7 +6,7 @@ import { HistoricalDataComponent } from './historical-data/historical-data.compo
 import { HistoricalComponent } from './historical.component';
 import { NbAutocompleteModule, NbButtonModule, NbCardModule, NbDatepickerModule, NbDialogModule, NbIconModule, NbInputModule, NbRadioModule, NbSpinnerModule, NbTimepickerModule } from '@nebular/theme';
 import { FormsModule } from '@angular/forms';
-import { SharedModule } from '../shared/shared.module';
+import { SharedModule } from '../../shared/shared.module';
 import { DownloadHistoricalDataComponent } from './download-historical-data/download-historical-data.component';
 
 

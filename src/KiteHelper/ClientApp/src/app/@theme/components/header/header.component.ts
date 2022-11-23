@@ -1,10 +1,11 @@
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { NbMenuService, NbSidebarService, NbToastrService } from '@nebular/theme';
+import { NbDialogService, NbMenuService, NbSidebarService, NbToastrService } from '@nebular/theme';
 
 import { Subject } from 'rxjs';
 import { KiteApiService, ProfileResponseModel } from 'src/app/services/api/kite-api.service';
 import { RoutingHelperService } from 'src/app/services/routing-helper.service';
+import { ErrorDialogComponent } from 'src/app/shared/error-dialog/error-dialog.component';
 import { environment } from 'src/environments/environment';
 
 @Component({
@@ -34,6 +35,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private hamburgerService: NbMenuService,
     private toastrService: NbToastrService,
     private kiteApiService: KiteApiService,
+    private dialogService: NbDialogService,
   ) { }
 
   ngOnInit() {
@@ -51,7 +53,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
         }, (errorResponse: HttpErrorResponse) => {
           console.error(errorResponse);
           if (errorResponse.status > 0) {
-            this.toastrService.danger(JSON.stringify(errorResponse.error), environment.defaultErrorTitle);
+            this.toastrService.danger(JSON.stringify(errorResponse.error), environment.defaultErrorTitle, { duration: 5000 });
+            this.dialogService.open(ErrorDialogComponent,
+              {
+                hasBackdrop: true,
+                context: {
+                  errorTitle: environment.defaultErrorTitle,
+                  errorMessage: JSON.stringify(errorResponse.error),
+                },
+              });
           } else {
             this.toastrService.danger(environment.defaultErrorMessage, environment.defaultErrorTitle);
           }

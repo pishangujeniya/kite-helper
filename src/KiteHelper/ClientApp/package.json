@@ -1,6 +1,6 @@
 {
   "name": "kitehelper",
-  "version": "1.0",
+  "version": "1.1",
   "scripts": {
     "postinstall": "ngcc --properties es2015 es5 browser module main --first-only --create-ivy-entry-points",
     "install:packages": "npm install --legacy-peer-deps --location=project",

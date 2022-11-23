@@ -57,9 +57,15 @@ namespace KiteHelper.Controllers
                     return Unauthorized();
                 }
             }
+            catch (WebException we)
+            {
+                var (statusCode, responseString) = we.GetResponseStringNoException();
+                Response.StatusCode = (int)statusCode;
+                return Content(responseString);
+            }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error in Login");
+                _logger.LogError(e, $"Error in {nameof(Login)}");
                 return new StatusCodeResult(500);
             }
         }
@@ -72,9 +78,23 @@ namespace KiteHelper.Controllers
         [KiteAuthorize]
         public async Task<ActionResult> Profile()
         {
-            var kiteSdk = KiteSessionHelper.GetKiteSdkFromSession(Request.Headers.Authorization);
-            Response.StatusCode = (int)HttpStatusCode.OK;
-            return new JsonResult(kiteSdk?.GetProfile());
+            try
+            {
+                var kiteSdk = KiteSessionHelper.GetKiteSdkFromSession(Request.Headers.Authorization);
+                Response.StatusCode = (int)HttpStatusCode.OK;
+                return new JsonResult(kiteSdk?.GetProfile());
+            }
+            catch (WebException we)
+            {
+                var (statusCode, responseString) = we.GetResponseStringNoException();
+                Response.StatusCode = (int)statusCode;
+                return Content(responseString);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Error in {nameof(Profile)}");
+                return new StatusCodeResult(500);
+            }
         }
 
         [HttpGet]
@@ -83,15 +103,29 @@ namespace KiteHelper.Controllers
         [SwaggerResponse((int)HttpStatusCode.InternalServerError)]
         public async Task<ActionResult> TradingSymbols([FromQuery()] TradingSymbolsRequestModel tradingSymbolsRequestModel)
         {
-            tradingSymbolsRequestModel.TradingSymbol = tradingSymbolsRequestModel.TradingSymbol?.ToUpper() ?? string.Empty;
+            try
+            {
+                tradingSymbolsRequestModel.TradingSymbol = tradingSymbolsRequestModel.TradingSymbol?.ToUpper() ?? string.Empty;
 
-            var result = _databaseContext.KiteInstrumentsEntity
-                .Where(myRow => string.IsNullOrWhiteSpace(tradingSymbolsRequestModel.TradingSymbol) || (myRow.TradingSymbol.ToUpper().Contains(tradingSymbolsRequestModel.TradingSymbol)))
-                .OrderBy(myRow => myRow.Expiry)
-                .Select(myRow => myRow).ToList();
+                var result = _databaseContext.KiteInstrumentsEntity
+                    .Where(myRow => string.IsNullOrWhiteSpace(tradingSymbolsRequestModel.TradingSymbol) || (myRow.TradingSymbol.ToUpper().Contains(tradingSymbolsRequestModel.TradingSymbol)))
+                    .OrderBy(myRow => myRow.Expiry)
+                    .Select(myRow => myRow).ToList();
 
-            Response.StatusCode = (int)HttpStatusCode.OK;
-            return new JsonResult(result);
+                Response.StatusCode = (int)HttpStatusCode.OK;
+                return new JsonResult(result);
+            }
+            catch (WebException we)
+            {
+                var (statusCode, responseString) = we.GetResponseStringNoException();
+                Response.StatusCode = (int)statusCode;
+                return Content(responseString);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Error in {nameof(TradingSymbols)}");
+                return new StatusCodeResult(500);
+            }
         }
 
         [HttpPost]
@@ -102,41 +136,55 @@ namespace KiteHelper.Controllers
         [KiteAuthorize]
         public async Task<ActionResult> HistoricalData([FromBody] HistoricalDataRequestModel historicalDataRequestModel)
         {
-            historicalDataRequestModel.Exchange = historicalDataRequestModel.Exchange.ToUpper();
-            historicalDataRequestModel.TradingSymbol = historicalDataRequestModel.TradingSymbol.ToUpper();
-
-            // Getting instrument token from the trading symbol
-            var instrumentToken = _databaseContext.KiteInstrumentsEntity
-                .Where(myRow => (myRow.Exchange.ToUpper() == historicalDataRequestModel.Exchange))
-                .Where(myRow => (myRow.TradingSymbol.ToUpper() == historicalDataRequestModel.TradingSymbol))
-                .Select(myRow => myRow.InstrumentToken).FirstOrDefault();
-
-            // Getting Historical Data
-            var kiteSdk = KiteSessionHelper.GetKiteSdkFromSession(Request.Headers.Authorization);
-
-            List<Historical> result = new List<Historical>();
-            foreach (var dateRange in SplitDateRange(historicalDataRequestModel.StartDateTime, historicalDataRequestModel.EndDateTime,50))
+            try
             {
-                var chunk = kiteSdk?.GetHistoricalData(instrumentToken, dateRange.Item1.ToLocalTime(), dateRange.Item2.ToLocalTime(), historicalDataRequestModel.Interval, false, true);
-                if (chunk != null)
+                historicalDataRequestModel.Exchange = historicalDataRequestModel.Exchange.ToUpper();
+                historicalDataRequestModel.TradingSymbol = historicalDataRequestModel.TradingSymbol.ToUpper();
+
+                // Getting instrument token from the trading symbol
+                var instrumentToken = _databaseContext.KiteInstrumentsEntity
+                    .Where(myRow => (myRow.Exchange.ToUpper() == historicalDataRequestModel.Exchange))
+                    .Where(myRow => (myRow.TradingSymbol.ToUpper() == historicalDataRequestModel.TradingSymbol))
+                    .Select(myRow => myRow.InstrumentToken).FirstOrDefault();
+
+                // Getting Historical Data
+                var kiteSdk = KiteSessionHelper.GetKiteSdkFromSession(Request.Headers.Authorization);
+
+                List<Historical> result = new List<Historical>();
+                foreach (var dateRange in SplitDateRange(historicalDataRequestModel.StartDateTime, historicalDataRequestModel.EndDateTime, 50))
                 {
-                    result.AddRange(chunk);
+                    var chunk = kiteSdk?.GetHistoricalData(instrumentToken, dateRange.Item1.ToLocalTime(), dateRange.Item2.ToLocalTime(), historicalDataRequestModel.Interval, false, true);
+                    if (chunk != null)
+                    {
+                        result.AddRange(chunk);
+                    }
+                }
+
+                Response.StatusCode = (int)HttpStatusCode.OK;
+                return new JsonResult(result);
+
+
+                IEnumerable<Tuple<DateTime, DateTime>> SplitDateRange(DateTime start, DateTime end, int dayChunkSize)
+                {
+                    DateTime chunkEnd;
+                    while ((chunkEnd = start.AddDays(dayChunkSize)) < end)
+                    {
+                        yield return Tuple.Create(start, chunkEnd);
+                        start = chunkEnd;
+                    }
+                    yield return Tuple.Create(start, end);
                 }
             }
-
-            Response.StatusCode = (int)HttpStatusCode.OK;
-            return new JsonResult(result);
-
-
-            IEnumerable<Tuple<DateTime, DateTime>> SplitDateRange(DateTime start, DateTime end, int dayChunkSize)
+            catch (WebException we)
             {
-                DateTime chunkEnd;
-                while ((chunkEnd = start.AddDays(dayChunkSize)) < end)
-                {
-                    yield return Tuple.Create(start, chunkEnd);
-                    start = chunkEnd;
-                }
-                yield return Tuple.Create(start, end);
+                var (statusCode, responseString) = we.GetResponseStringNoException();
+                Response.StatusCode = (int)statusCode;
+                return Content(responseString);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Error in {nameof(HistoricalData)}");
+                return new StatusCodeResult(500);
             }
         }
     }

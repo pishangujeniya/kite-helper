@@ -1,0 +1,28 @@
+<nb-card>
+    <nb-card-header>
+        <div class="row">
+            <div class="col-lg-12">
+                {{errorTitle}}
+            </div>
+        </div>
+    </nb-card-header>
+    <nb-card-body>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <label class="label" for="error-message">Message:</label>
+                <p style="color: red;" id="error-message">{{errorMessage}}</p>
+            </div>
+        </div>
+    </nb-card-body>
+    <nb-card-footer>
+        <div class="row">
+            <div class="col-lg-12">
+                <button nbButton fullWidth status="warning" size="large" (click)="copyToClipboard();">
+                    <nb-icon icon="copy-outline"></nb-icon>
+                    Copy Message
+                </button>
+            </div>
+        </div>
+    </nb-card-footer>
+</nb-card>

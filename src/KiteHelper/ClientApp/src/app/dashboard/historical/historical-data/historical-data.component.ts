@@ -2,6 +2,7 @@ import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { NbDialogService, NbToastrService } from '@nebular/theme';
 import { KiteApiService, TradingSymbolResponseModel } from 'src/app/services/api/kite-api.service';
+import { ErrorDialogComponent } from 'src/app/shared/error-dialog/error-dialog.component';
 import { environment } from 'src/environments/environment';
 import { DownloadHistoricalDataComponent } from '../download-historical-data/download-historical-data.component';
 
@@ -48,7 +49,15 @@ export class HistoricalDataComponent implements OnInit {
         }, (errorResponse: HttpErrorResponse) => {
           console.error(errorResponse);
           if (errorResponse.status > 0) {
-            this.toastrService.danger(JSON.stringify(errorResponse.error), environment.defaultErrorTitle);
+            this.toastrService.danger(JSON.stringify(errorResponse.error), environment.defaultErrorTitle, { duration: 5000 });
+            this.dialogService.open(ErrorDialogComponent,
+              {
+                hasBackdrop: true,
+                context: {
+                  errorTitle: environment.defaultErrorTitle,
+                  errorMessage: JSON.stringify(errorResponse.error),
+                },
+              });
           } else {
             this.toastrService.danger(environment.defaultErrorMessage, environment.defaultErrorTitle);
           }

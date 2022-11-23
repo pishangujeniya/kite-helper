@@ -1,9 +1,10 @@
 import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { NbToastrService } from '@nebular/theme';
+import { NbDialogService, NbToastrService } from '@nebular/theme';
 import { KiteApiService, KiteLoginResponseModel } from 'src/app/services/api/kite-api.service';
 import { CookieHelperService } from 'src/app/services/cookie-helper.service';
 import { RoutingHelperService } from 'src/app/services/routing-helper.service';
+import { ErrorDialogComponent } from 'src/app/shared/error-dialog/error-dialog.component';
 import { environment } from 'src/environments/environment';
 
 class UserNgModel {
@@ -26,6 +27,7 @@ export class LoginComponent implements OnInit {
     private toastrService: NbToastrService,
     private routingService: RoutingHelperService,
     private kiteApiService: KiteApiService,
+    private dialogService: NbDialogService,
   ) {
   }
 
@@ -52,7 +54,15 @@ export class LoginComponent implements OnInit {
         }, (errorResponse: HttpErrorResponse) => {
           console.error(errorResponse);
           if (errorResponse.status > 0) {
-            this.toastrService.danger(JSON.stringify(errorResponse.error), environment.defaultErrorTitle);
+            this.toastrService.danger(JSON.stringify(errorResponse.error), environment.defaultErrorTitle, { duration: 5000 });
+            this.dialogService.open(ErrorDialogComponent,
+              {
+                hasBackdrop: true,
+                context: {
+                  errorTitle: environment.defaultErrorTitle,
+                  errorMessage: JSON.stringify(errorResponse.error),
+                },
+              });
           } else {
             this.toastrService.danger(environment.defaultErrorMessage, environment.defaultErrorTitle);
           }
