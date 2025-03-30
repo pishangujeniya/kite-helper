@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Collections;
 using System.Reflection;
+using System.Net.Http;
+using System.Text;
+using System.Net.Mime;
+using System.Net;
 
 namespace KiteConnect
 {
@@ -17,17 +19,18 @@ namespace KiteConnect
         // override this by passing the `Root` parameter during initialisation.
         public string _root = "https://api.kite.trade";
         public string _login = "https://kite.zerodha.com/connect/login";
+
         public string _apiKey;
         public string _accessToken;
         public bool _enableLogging;
-        public WebProxy _proxy;
+
         public int _timeout;
 
         public Action _sessionHook;
 
-        //private Cache cache = new Cache();
+        public HttpClient httpClient;
 
-        public Dictionary<string, string> _routes = new Dictionary<string, string>
+        public readonly Dictionary<string, string> _routes = new Dictionary<string, string>
         {
             ["parameters"] = "/parameters",
             ["api.token"] = "/session/token",
@@ -36,6 +39,7 @@ namespace KiteConnect
             ["instrument.margins"] = "/margins/{segment}",
             ["order.margins"] = "/margins/orders",
             ["basket.margins"] = "/margins/basket",
+            ["order.contractnote"] = "/charges/orders",
 
             ["user.profile"] = "/user/profile",
             ["user.margins"] = "/user/margins",
@@ -59,6 +63,7 @@ namespace KiteConnect
             ["portfolio.positions"] = "/portfolio/positions",
             ["portfolio.holdings"] = "/portfolio/holdings",
             ["portfolio.positions.modify"] = "/portfolio/positions",
+            ["portfolio.auction.instruments"] = "/portfolio/holdings/auctions",
 
             ["market.instruments.all"] = "/instruments",
             ["market.instruments"] = "/instruments/{exchange}",
@@ -95,7 +100,7 @@ namespace KiteConnect
         /// <param name="Timeout">Time in milliseconds for which  the API client will wait for a request to complete before it fails</param>
         /// <param name="Proxy">To set proxy for http request. Should be an object of WebProxy.</param>
         /// <param name="Pool">Number of connections to server. Client will reuse the connections if they are alive.</param>
-        public Kite(string APIKey, string AccessToken = null, string Root = null, bool Debug = false, int Timeout = 7000, WebProxy Proxy = null, int Pool = 2)
+        public Kite(string APIKey, string AccessToken = null, string Root = null, bool Debug = false, int Timeout = 7000, IWebProxy Proxy = null, int Pool = 2)
         {
             _accessToken = AccessToken;
             _apiKey = APIKey;
@@ -103,7 +108,16 @@ namespace KiteConnect
             _enableLogging = Debug;
 
             _timeout = Timeout;
-            _proxy = Proxy;
+
+            HttpClientHandler httpClientHandler = new HttpClientHandler()
+            {
+                Proxy = Proxy,
+            };
+            httpClient = new(httpClientHandler)
+            {
+                BaseAddress = new Uri(_root),
+                Timeout = TimeSpan.FromMilliseconds(Timeout),
+            };
 
             ServicePointManager.DefaultConnectionLimit = Pool;
         }
@@ -163,7 +177,7 @@ namespace KiteConnect
         /// <returns>User structure with tokens and profile data</returns>
         public User GenerateSession(string RequestToken, string AppSecret)
         {
-            string checksum = Utils.SHA256(_apiKey + RequestToken + AppSecret);
+            string checksum = Utils.SHA256Hash(_apiKey + RequestToken + AppSecret);
 
             var param = new Dictionary<string, dynamic>
             {
@@ -217,7 +231,7 @@ namespace KiteConnect
         {
             var param = new Dictionary<string, dynamic>();
 
-            string checksum = Utils.SHA256(_apiKey + RefreshToken + AppSecret);
+            string checksum = Utils.SHA256Hash(_apiKey + RefreshToken + AppSecret);
 
             Utils.AddIfNotNull(param, "api_key", _apiKey);
             Utils.AddIfNotNull(param, "refresh_token", RefreshToken);
@@ -235,6 +249,40 @@ namespace KiteConnect
             var profileData = Get("user.profile");
 
             return new Profile(profileData);
+        }
+
+        /// <summary>
+        /// A virtual contract provides detailed charges order-wise for brokerage, STT, stamp duty, exchange transaction charges, SEBI turnover charge, and GST.
+        /// </summary>
+        /// <param name="ContractNoteParams">List of all order params to get contract notes for</param>
+        /// <returns>List of contract notes for the params</returns>
+        public List<ContractNote> GetVirtualContractNote(List<ContractNoteParams> ContractNoteParams)
+        {
+            var paramList = new List<Dictionary<string, dynamic>>();
+
+            foreach (var item in ContractNoteParams)
+            {
+                var param = new Dictionary<string, dynamic>();
+                param["order_id"] = item.OrderID;
+                param["exchange"] = item.Exchange;
+                param["tradingsymbol"] = item.TradingSymbol;
+                param["transaction_type"] = item.TransactionType;
+                param["quantity"] = item.Quantity;
+                param["average_price"] = item.AveragePrice;
+                param["product"] = item.Product;
+                param["order_type"] = item.OrderType;
+                param["variety"] = item.Variety;
+
+                paramList.Add(param);
+            }
+
+            var contractNoteData = Post("order.contractnote", paramList, json: true);
+
+            List<ContractNote> contractNotes = new List<ContractNote>();
+            foreach (Dictionary<string, dynamic> item in contractNoteData["data"])
+                contractNotes.Add(new ContractNote(item));
+
+            return contractNotes;
         }
 
         /// <summary>
@@ -378,7 +426,8 @@ namespace KiteConnect
             string Tag = "",
             int? ValidityTTL = null,
             int? IcebergLegs = null,
-            int? IcebergQuantity = null
+            int? IcebergQuantity = null,
+            string AuctionNumber = null
             )
         {
             var param = new Dictionary<string, dynamic>();
@@ -401,6 +450,7 @@ namespace KiteConnect
             Utils.AddIfNotNull(param, "validity_ttl", ValidityTTL.ToString());
             Utils.AddIfNotNull(param, "iceberg_legs", IcebergLegs.ToString());
             Utils.AddIfNotNull(param, "iceberg_quantity", IcebergQuantity.ToString());
+            Utils.AddIfNotNull(param, "auction_number", AuctionNumber);
 
             return Post("orders.place", param);
         }
@@ -577,6 +627,22 @@ namespace KiteConnect
                 holdings.Add(new Holding(item));
 
             return holdings;
+        }
+
+        /// <summary>
+        /// Retrieve the list of auction instruments.
+        /// </summary>
+        /// <returns>List of auction instruments.</returns>
+        public List<AuctionInstrument> GetAuctionInstruments()
+        {
+            var instrumentsData = Get("portfolio.auction.instruments");
+
+            List<AuctionInstrument> instruments = new List<AuctionInstrument>();
+
+            foreach (Dictionary<string, dynamic> item in instrumentsData["data"])
+                instruments.Add(new AuctionInstrument(item));
+
+            return instruments;
         }
 
         /// <summary>
@@ -1116,7 +1182,7 @@ namespace KiteConnect
         /// <param name="Route">URL route of API</param>
         /// <param name="Params">Additional paramerters</param>
         /// <returns>Varies according to API endpoint</returns>
-        public virtual dynamic Get(string Route, Dictionary<string, dynamic> Params = null, Dictionary<string, dynamic> QueryParams = null)
+        public dynamic Get(string Route, Dictionary<string, dynamic> Params = null, Dictionary<string, dynamic> QueryParams = null)
         {
             return Request(Route, "GET", Params, QueryParams);
         }
@@ -1127,7 +1193,7 @@ namespace KiteConnect
         /// <param name="Route">URL route of API</param>
         /// <param name="Params">Additional paramerters</param>
         /// <returns>Varies according to API endpoint</returns>
-        public virtual dynamic Post(string Route, dynamic Params = null, Dictionary<string, dynamic> QueryParams = null, bool json = false)
+        public dynamic Post(string Route, dynamic Params = null, Dictionary<string, dynamic> QueryParams = null, bool json = false)
         {
             return Request(Route, "POST", Params, QueryParams: QueryParams, json: json);
         }
@@ -1138,7 +1204,7 @@ namespace KiteConnect
         /// <param name="Route">URL route of API</param>
         /// <param name="Params">Additional paramerters</param>
         /// <returns>Varies according to API endpoint</returns>
-        public virtual dynamic Put(string Route, dynamic Params = null)
+        public dynamic Put(string Route, dynamic Params = null)
         {
             return Request(Route, "PUT", Params);
         }
@@ -1149,7 +1215,7 @@ namespace KiteConnect
         /// <param name="Route">URL route of API</param>
         /// <param name="Params">Additional paramerters</param>
         /// <returns>Varies according to API endpoint</returns>
-        public virtual dynamic Delete(string Route, dynamic Params = null)
+        public dynamic Delete(string Route, dynamic Params = null)
         {
             return Request(Route, "DELETE", Params);
         }
@@ -1158,28 +1224,22 @@ namespace KiteConnect
         /// Adds extra headers to request
         /// </summary>
         /// <param name="Req">Request object to add headers</param>
-        public virtual void AddExtraHeaders(ref HttpWebRequest Req)
+        public virtual void AddExtraHeaders(ref HttpRequestMessage Req)
         {
-            var KiteAssembly = System.Reflection.Assembly.GetAssembly(typeof(Kite));
+            var KiteAssembly = Assembly.GetAssembly(typeof(Kite));
             if (KiteAssembly != null)
-                Req.UserAgent = "KiteConnect.Net/" + KiteAssembly.GetName().Version;
+            {
+                Req.Headers.UserAgent.TryParseAdd("KiteConnect.Net/" + KiteAssembly.GetName().Version);
+            }
 
             Req.Headers.Add("X-Kite-Version", "3");
             Req.Headers.Add("Authorization", "token " + _apiKey + ":" + _accessToken);
 
-            //if(Req.Method == "GET" && cache.IsCached(Req.RequestUri.AbsoluteUri))
-            //{
-            //    Req.Headers.Add("If-None-Match: " + cache.GetETag(Req.RequestUri.AbsoluteUri));
-            //}
-
-            Req.Timeout = _timeout;
-            if (_proxy != null) Req.Proxy = _proxy;
-
             if (_enableLogging)
             {
-                foreach (string header in Req.Headers.Keys)
+                foreach (var header in Req.Headers)
                 {
-                    Console.WriteLine("DEBUG: " + header + ": " + Req.Headers.GetValues(header)[0]);
+                    Console.WriteLine("DEBUG: " + header.Key + ": " + String.Join(",", header.Value.ToArray()));
                 }
             }
         }
@@ -1213,7 +1273,7 @@ namespace KiteConnect
                     }
             }
 
-            HttpWebRequest request;
+            HttpRequestMessage request = new();
 
             if (Method == "POST" || Method == "PUT")
             {
@@ -1229,17 +1289,13 @@ namespace KiteConnect
                 else
                     requestBody = String.Join("&", (Params as Dictionary<string, dynamic>).Select(x => Utils.BuildParam(x.Key, x.Value)));
 
-                request = (HttpWebRequest)WebRequest.Create(url);
-                request.AllowAutoRedirect = true;
-                request.Method = Method;
-                request.ContentType = json ? "application/json" : "application/x-www-form-urlencoded";
-                request.ContentLength = requestBody.Length;
-                if (_enableLogging) Console.WriteLine("DEBUG: " + Method + " " + url + "\n" + requestBody);
+                request.RequestUri = new Uri(url);
+                request.Method = new HttpMethod(Method);
                 AddExtraHeaders(ref request);
 
-                using (Stream webStream = request.GetRequestStream())
-                using (StreamWriter requestWriter = new StreamWriter(webStream))
-                    requestWriter.Write(requestBody);
+                if (_enableLogging) Console.WriteLine("DEBUG: " + Method + " " + url + "\n" + requestBody);
+
+                request.Content = new StringContent(requestBody, Encoding.UTF8, json ? "application/json" : "application/x-www-form-urlencoded");
             }
             else
             {
@@ -1260,75 +1316,57 @@ namespace KiteConnect
                     url += "?" + String.Join("&", allParams.Select(x => Utils.BuildParam(x.Key, x.Value)));
                 }
 
-                request = (HttpWebRequest)WebRequest.Create(url);
-                request.AllowAutoRedirect = true;
-                request.Method = Method;
+                request.RequestUri = new Uri(url);
+                request.Method = new HttpMethod(Method);
                 if (_enableLogging) Console.WriteLine("DEBUG: " + Method + " " + url);
                 AddExtraHeaders(ref request);
             }
 
-            WebResponse webResponse;
-            try
-            {
-                webResponse = request.GetResponse();
-            }
-            catch (WebException e)
-            {
-                if (e.Response is null)
-                    throw e;
+            HttpResponseMessage response = httpClient.Send(request);
+            HttpStatusCode status = response.StatusCode;
 
-                webResponse = e.Response;
-            }
+            string responseBody = response.Content.ReadAsStringAsync().Result;
+            if (_enableLogging) Console.WriteLine("DEBUG: " + ((int)status) + " " + responseBody + "\n");
 
-            using (Stream webStream = webResponse.GetResponseStream())
+            if (response.Content.Headers.ContentType.MediaType == MediaTypeNames.Application.Json)
             {
-                using (StreamReader responseReader = new StreamReader(webStream))
+                Dictionary<string, dynamic> responseDictionary = Utils.JsonDeserialize(responseBody);
+
+                if (status != HttpStatusCode.OK)
                 {
-                    string response = responseReader.ReadToEnd();
-                    if (_enableLogging) Console.WriteLine("DEBUG: " + (int)((HttpWebResponse)webResponse).StatusCode + " " + response + "\n");
+                    string errorType = "GeneralException";
+                    string message = "";
 
-                    HttpStatusCode status = ((HttpWebResponse)webResponse).StatusCode;
+                    if (responseDictionary.ContainsKey("error_type"))
+                        errorType = responseDictionary["error_type"];
 
-                    if (webResponse.ContentType == "application/json")
+                    if (responseDictionary.ContainsKey("message"))
+                        message = responseDictionary["message"];
+
+                    switch (errorType)
                     {
-                        Dictionary<string, dynamic> responseDictionary = Utils.JsonDeserialize(response);
-
-                        if (status != HttpStatusCode.OK)
-                        {
-                            string errorType = "GeneralException";
-                            string message = "";
-
-                            if (responseDictionary.ContainsKey("error_type"))
-                                errorType = responseDictionary["error_type"];
-
-                            if (responseDictionary.ContainsKey("message"))
-                                message = responseDictionary["message"];
-
-                            switch (errorType)
+                        case "GeneralException": throw new GeneralException(message, status);
+                        case "TokenException":
                             {
-                                case "GeneralException": throw new GeneralException(message, status);
-                                case "TokenException":
-                                    {
-                                        _sessionHook?.Invoke();
-                                        throw new TokenException(message, status);
-                                    }
-                                case "PermissionException": throw new PermissionException(message, status);
-                                case "OrderException": throw new OrderException(message, status);
-                                case "InputException": throw new InputException(message, status);
-                                case "DataException": throw new DataException(message, status);
-                                case "NetworkException": throw new NetworkException(message, status);
-                                default: throw new GeneralException(message, status);
+                                _sessionHook?.Invoke();
+                                throw new TokenException(message, status);
                             }
-                        }
-
-                        return responseDictionary;
+                        case "PermissionException": throw new PermissionException(message, status);
+                        case "OrderException": throw new OrderException(message, status);
+                        case "InputException": throw new InputException(message, status);
+                        case "DataException": throw new DataException(message, status);
+                        case "NetworkException": throw new NetworkException(message, status);
+                        default: throw new GeneralException(message, status);
                     }
-                    else if (webResponse.ContentType == "text/csv")
-                        return Utils.ParseCSV(response);
-                    else
-                        throw new DataException("Unexpected content type " + webResponse.ContentType + " " + response);
                 }
+
+                return responseDictionary;
             }
+            else if (response.Content.Headers.ContentType.MediaType == "text/csv")
+                return Utils.ParseCSV(responseBody);
+            else
+                throw new DataException("Unexpected content type " + response.Content.Headers.ContentType.MediaType + " " + response);
+
         }
 
         #endregion

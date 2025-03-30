@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Authors>Ajin Asokan</Authors>
     <Company>Zerodha Technology Pvt. Ltd.</Company>
     <PackageId>Tech.Zerodha.KiteConnect</PackageId>
-    <Version>4.0.1</Version>
-    <AssemblyVersion>4.0.1</AssemblyVersion>
-    <FileVersion>4.0.1</FileVersion>
+    <Version>4.3.0</Version>
+    <AssemblyVersion>4.3.0</AssemblyVersion>
+    <FileVersion>4.3.0</FileVersion>
     <Description>The official .Net client for communicating with Kite Connect API.</Description>
-    <Copyright>Copyright 2020</Copyright>
+    <Copyright>Copyright 2024</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/zerodhatech/dotnetkiteconnect</PackageProjectUrl>
     <PackageIconUrl>https://kite.zerodha.com/static/images/kite-logo.svg</PackageIconUrl>

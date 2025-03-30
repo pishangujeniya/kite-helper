@@ -38,7 +38,7 @@ namespace KiteHelper.Controllers
             try
             {
                 KiteSdk kiteSdk = new KiteSdk();
-                var isLoggedIn = kiteSdk.Login(kiteLoginRequestModel.UserName, kiteLoginRequestModel.Password, kiteLoginRequestModel.AppCode.ToString());
+                var isLoggedIn = await kiteSdk.Login(kiteLoginRequestModel.UserName, kiteLoginRequestModel.Password, kiteLoginRequestModel.AppCode.ToString());
                 if (isLoggedIn)
                 {
                     string? sessionId = KiteSessionHelper.AddKiteSession(kiteLoginRequestModel.UserName, kiteSdk);

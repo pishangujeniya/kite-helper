@@ -1,5 +1,4 @@
-﻿
-using System.Data;
+﻿using System.Data;
 using System.Globalization;
 using System.Net;
 using System.Text;
@@ -59,48 +58,35 @@ namespace KiteConnectSdk
         /// <param name="appCode"></param>
         /// <exception cref="GeneralException"></exception>
         /// <exception cref="TokenException"></exception>
-        public bool Login(string userId, string password, string appCode)
+        public async Task<bool> Login(string userId, string password, string appCode)
         {
             this._userId = userId;
 
             string loginUrl = "https://kite.zerodha.com/api/login";
 
-            string loginPostData = "";
-            Dictionary<string, string> postParameters = new() { { "user_id", userId }, { "password", password } };
-
-            foreach (string key in postParameters.Keys)
+            // Create form data
+            var postParameters = new Dictionary<string, string>
             {
-                loginPostData += HttpUtility.UrlEncode(key) + "=" + HttpUtility.UrlEncode(postParameters[key]) + "&";
-            }
+                { "user_id", userId },
+                { "password", password }
+            };
 
-            HttpWebRequest loginHttpWebRequest = (HttpWebRequest)WebRequest.Create(loginUrl);
-            loginHttpWebRequest.Method = "POST";
+            // Create HTTP request
+            var loginRequest = new HttpRequestMessage(HttpMethod.Post, loginUrl)
+            {
+                Content = new FormUrlEncodedContent(postParameters)
+            };
 
-            byte[] loginData = Encoding.ASCII.GetBytes(loginPostData);
+            // Add headers
+            AddExtraHeaders(ref loginRequest);
 
-            loginHttpWebRequest.ContentType = "application/x-www-form-urlencoded";
-            loginHttpWebRequest.ContentLength = loginData.Length;
+            // Send request
+            using var httpClient = new HttpClient();
+            using var loginResponse = await httpClient.SendAsync(loginRequest);
 
-            AddExtraHeaders(ref loginHttpWebRequest);
-
-            Stream loginRequestStream = loginHttpWebRequest.GetRequestStream();
-            loginRequestStream.Write(loginData, 0, loginData.Length);
-            loginRequestStream.Close();
-
-            HttpWebResponse loginHttpWebResponse = (HttpWebResponse)loginHttpWebRequest.GetResponse();
-
-            Stream loginResponseStream = loginHttpWebResponse.GetResponseStream();
-
-            StreamReader loginStreamReader = new StreamReader(loginResponseStream, Encoding.Default);
-
-            string loginResponseContent = loginStreamReader.ReadToEnd();
-
-            loginStreamReader.Close();
-            loginResponseStream.Close();
-
-            loginHttpWebResponse.Close();
-
-            JToken loginResponseToken = JObject.Parse(loginResponseContent);
+            // Read response
+            var loginResponseContent = await loginResponse.Content.ReadAsStringAsync();
+            var loginResponseToken = JObject.Parse(loginResponseContent);
 
             string? loginResponseStatus = (string?)(loginResponseToken.SelectToken("status"));
             if (!string.IsNullOrWhiteSpace(loginResponseStatus) && loginResponseStatus.ToLower().Equals("success"))
@@ -108,76 +94,57 @@ namespace KiteConnectSdk
                 string? loginResponseRequestId = (string?)loginResponseToken.SelectToken("data")?.SelectToken("request_id");
                 if (!string.IsNullOrWhiteSpace(loginResponseRequestId))
                 {
-                    return TwoFactorAuthentication(loginResponseRequestId);
+                    return await TwoFactorAuthentication(loginResponseRequestId, appCode);
                 }
                 else
                 {
-                    throw new GeneralException("request id not found in the login attempt", loginHttpWebResponse.StatusCode);
+                    throw new GeneralException("request id not found in the login attempt", loginResponse.StatusCode);
                 }
             }
             else
             {
-                throw new TokenException("login attempt failed", loginHttpWebResponse.StatusCode);
+                throw new TokenException("login attempt failed", loginResponse.StatusCode);
             }
 
-            bool TwoFactorAuthentication(string requestId)
+            async Task<bool> TwoFactorAuthentication(string requestId, string appCode)
             {
                 string twoFactorAuthenticationUrl = "https://kite.zerodha.com/api/twofa";
 
-                string twofaPostData = "";
-                Dictionary<string, string> postParameters = new()
-            {
-                { "user_id", userId },
-                { "request_id", requestId },
-                { "twofa_type", "app_code" },
-                { "twofa_value", appCode }
-            };
-
-                foreach (string key in postParameters.Keys)
+                // Create form data
+                var postParameters = new Dictionary<string, string>
                 {
-                    twofaPostData += HttpUtility.UrlEncode(key) + "=" + HttpUtility.UrlEncode(postParameters[key]) + "&";
-                }
+                    { "user_id", userId },
+                    { "request_id", requestId },
+                    { "twofa_type", "app_code" },
+                    { "twofa_value", appCode }
+                };
 
-                HttpWebRequest twoFahttpWebRequest = (HttpWebRequest)WebRequest.Create(twoFactorAuthenticationUrl);
-                twoFahttpWebRequest.Method = "POST";
+                // Create HTTP request
+                var twoFaRequest = new HttpRequestMessage(HttpMethod.Post, twoFactorAuthenticationUrl)
+                {
+                    Content = new FormUrlEncodedContent(postParameters)
+                };
 
-                byte[] twoFaData = Encoding.ASCII.GetBytes(twofaPostData);
+                // Add headers
+                AddExtraHeaders(ref twoFaRequest);
 
-                twoFahttpWebRequest.ContentType = "application/x-www-form-urlencoded";
-                twoFahttpWebRequest.ContentLength = twoFaData.Length;
+                // Send request
+                using var twoFaResponse = await httpClient.SendAsync(twoFaRequest);
 
-                AddExtraHeaders(ref twoFahttpWebRequest);
+                // Read response
+                var responseContent = await twoFaResponse.Content.ReadAsStringAsync();
+                SetEncTokenIfReceived(twoFaResponse);
 
-                Stream twoFaRequestStream = twoFahttpWebRequest.GetRequestStream();
-                twoFaRequestStream.Write(twoFaData, 0, twoFaData.Length);
-                twoFaRequestStream.Close();
-
-                HttpWebResponse twoFaHttpWebResponse = (HttpWebResponse)twoFahttpWebRequest.GetResponse();
-                string header = twoFaHttpWebResponse.GetResponseHeader("Set-Cookie");
-                Stream twoFaResponseStream = twoFaHttpWebResponse.GetResponseStream();
-
-                StreamReader twoFaStreamReader = new StreamReader(twoFaResponseStream, Encoding.Default);
-
-                string responseContent = twoFaStreamReader.ReadToEnd();
-
-                SetEncTokenIfReceived(twoFaHttpWebResponse);
-
-                twoFaStreamReader.Close();
-                twoFaResponseStream.Close();
-
-                twoFaHttpWebResponse.Close();
-
-                JToken twoFaToken = JObject.Parse(responseContent);
+                var twoFaToken = JObject.Parse(responseContent);
 
                 string? twoFaResponseStatus = (string?)(twoFaToken.SelectToken("status"));
                 if (!string.IsNullOrWhiteSpace(twoFaResponseStatus) && twoFaResponseStatus.ToLower().Equals("success"))
                 {
-                    // Means succeeded
                     return true;
                 }
                 else
                 {
-                    throw new TokenException("app code verification failed", twoFaHttpWebResponse.StatusCode);
+                    throw new TokenException("app code verification failed", twoFaResponse.StatusCode);
                 }
             }
         }
@@ -185,54 +152,59 @@ namespace KiteConnectSdk
         /// <summary>
         /// A method which will extract the enctoken from the cookies and set it to the _encToken variable
         /// </summary>
-        /// <param name="webResponse"></param>
-        private void SetEncTokenIfReceived(WebResponse webResponse)
+        /// <param name="response"></param>
+        private void SetEncTokenIfReceived(HttpResponseMessage response)
         {
-            string encTokenCookie = ((HttpWebResponse)webResponse).Cookies.ToList().FirstOrDefault(x => x.Name.ToLower().Equals("enctoken"))?.Value ?? string.Empty;
-            if (!string.IsNullOrWhiteSpace(encTokenCookie)) this._encToken = encTokenCookie;
+            if (response.Headers.TryGetValues("Set-Cookie", out var cookieValues))
+            {
+                var encTokenCookie = cookieValues.FirstOrDefault(x => x.StartsWith("enctoken="));
+                if (!string.IsNullOrWhiteSpace(encTokenCookie))
+                {
+                    this._encToken = encTokenCookie.Split(';')[0].Substring("enctoken=".Length);
+                }
+            }
         }
 
         /// <summary>
         /// Adds the browser based extra custom headers needed for the requests
         /// </summary>
         /// <param name="Req"></param>
-        public override void AddExtraHeaders(ref HttpWebRequest Req)
+        public override void AddExtraHeaders(ref HttpRequestMessage Req)
         {
-
             base.AddExtraHeaders(ref Req);
 
-            Req.CookieContainer = new CookieContainer();
+            // Set User-Agent (replaces if exists)
+            Req.Headers.UserAgent.Clear();
+            Req.Headers.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36");
 
-            #region Custom Headers
+            // Set Accept header (replaces if exists)
+            Req.Headers.Accept.Clear();
+            Req.Headers.Accept.ParseAdd("text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
 
-            Req.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36";
-            Req.Headers.Remove(HttpRequestHeader.Accept); Req.Headers.Add(HttpRequestHeader.Accept, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
-            Req.Headers.Remove(HttpRequestHeader.AcceptLanguage); Req.Headers.Add(HttpRequestHeader.AcceptLanguage, "en-GB,en-US;q=0.9,en;q=0.8");
-            Req.Headers.Remove("X-Kite-Version"); Req.Headers.Add("X-Kite-Version", "3.0.6");
-            Req.Headers.Remove("sec-fetch-site"); Req.Headers.Add("sec-fetch-site", "same-origin");
-            Req.Headers.Remove("sec-fetch-mode"); Req.Headers.Add("sec-fetch-mode", "cors");
-            Req.Headers.Remove("sec-fetch-dest"); Req.Headers.Add("sec-fetch-dest", "empty");
-            Req.Headers.Remove(HttpRequestHeader.Referer); Req.Headers.Add(HttpRequestHeader.Referer, "https://kite.zerodha.com/dashboard");
+            // Set Accept-Language header (replaces if exists)
+            Req.Headers.AcceptLanguage.Clear();
+            Req.Headers.AcceptLanguage.ParseAdd("en-GB,en-US;q=0.9,en;q=0.8");
 
+            // Add custom headers (using TryAddWithoutValidation to avoid exceptions if header exists)
+            Req.Headers.TryAddWithoutValidation("X-Kite-Version", "3.0.6");
+            Req.Headers.TryAddWithoutValidation("sec-fetch-site", "same-origin");
+            Req.Headers.TryAddWithoutValidation("sec-fetch-mode", "cors");
+            Req.Headers.TryAddWithoutValidation("sec-fetch-dest", "empty");
+
+            // Set Referrer (replaces if exists)
+            Req.Headers.Referrer = new Uri("https://kite.zerodha.com/dashboard");
+
+            // Add user ID if available
             if (!string.IsNullOrWhiteSpace(this._userId))
             {
-                Req.Headers.Remove("x-kite-userid"); Req.Headers.Add("x-kite-userid", _userId);
-            }
-            else
-            {
-                Req.Headers.Remove("x-kite-userid");
+                Req.Headers.TryAddWithoutValidation("x-kite-userid", _userId);
             }
 
+            // Add authorization token if available (replaces if exists)
             if (!string.IsNullOrWhiteSpace(this._encToken))
             {
-                Req.Headers.Remove(HttpRequestHeader.Authorization); Req.Headers.Add(HttpRequestHeader.Authorization, $"enctoken {this._encToken}");
+                Req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("enctoken", this._encToken);
             }
-            else
-            {
-                Req.Headers.Remove(HttpRequestHeader.Authorization);
-            }
-
-            #endregion
         }
 
         /// <summary>
@@ -251,7 +223,7 @@ namespace KiteConnectSdk
         /// <exception cref="InputException"></exception>
         /// <exception cref="KiteConnect.DataException"></exception>
         /// <exception cref="NetworkException"></exception>
-        public override object Request(string Route, string Method, dynamic Params = null, Dictionary<string, dynamic> QueryParams = null, bool json = false)
+        public override async Task<object> Request(string Route, string Method, dynamic Params = null, Dictionary<string, dynamic> QueryParams = null, bool json = false)
         {
             string route = _root + _routes[Route];
 
@@ -273,7 +245,9 @@ namespace KiteConnectSdk
                     }
             }
 
-            HttpWebRequest request;
+            using var httpClient = new HttpClient();
+            HttpRequestMessage request;
+            HttpResponseMessage response;
 
             if (Method == "POST" || Method == "PUT")
             {
@@ -283,28 +257,25 @@ namespace KiteConnectSdk
                     url += "?" + String.Join("&", QueryParams.Select(x => Utils.BuildParam(x.Key, x.Value)));
                 }
 
-                string requestBody = "";
-                if (json)
-                    requestBody = Utils.JsonSerialize(Params);
-                else
-                    requestBody = String.Join("&", (Params as Dictionary<string, dynamic>).Select(x => Utils.BuildParam(x.Key, x.Value)));
+                string requestBody = json ? Utils.JsonSerialize(Params)
+                    : String.Join("&", (Params as Dictionary<string, dynamic>).Select(x => Utils.BuildParam(x.Key, x.Value)));
 
-                request = (HttpWebRequest)WebRequest.Create(url);
-                request.AllowAutoRedirect = true;
-                request.Method = Method;
-                request.ContentType = json ? "application/json" : "application/x-www-form-urlencoded";
-                request.ContentLength = requestBody.Length;
+                var formData = (Params as Dictionary<string, dynamic> ?? new Dictionary<string, dynamic>())
+                    .Select(x => new KeyValuePair<string, string>(x.Key, x.Value?.ToString() ?? string.Empty));
+
+                request = new HttpRequestMessage(new HttpMethod(Method), url)
+                {
+                    Content = json ? new StringContent(requestBody, Encoding.UTF8, "application/json")
+                        : new FormUrlEncodedContent(formData)
+                };
+
                 if (_enableLogging) Console.WriteLine("DEBUG: " + Method + " " + url + "\n" + requestBody);
-                AddExtraHeaders(ref request);
-
-                using (Stream webStream = request.GetRequestStream())
-                using (StreamWriter requestWriter = new StreamWriter(webStream))
-                    requestWriter.Write(requestBody);
             }
             else
             {
                 string url = route;
                 Dictionary<string, dynamic> allParams = new Dictionary<string, dynamic>();
+
                 // merge both params
                 foreach (KeyValuePair<string, dynamic> item in QueryParams)
                 {
@@ -314,81 +285,74 @@ namespace KiteConnectSdk
                 {
                     allParams[item.Key] = item.Value;
                 }
+
                 // build final url
                 if (allParams.Count > 0)
                 {
                     url += "?" + String.Join("&", allParams.Select(x => Utils.BuildParam(x.Key, x.Value)));
                 }
 
-                request = (HttpWebRequest)WebRequest.Create(url);
-                request.AllowAutoRedirect = true;
-                request.Method = Method;
+                request = new HttpRequestMessage(new HttpMethod(Method), url);
                 if (_enableLogging) Console.WriteLine("DEBUG: " + Method + " " + url);
-                AddExtraHeaders(ref request);
             }
 
-            WebResponse webResponse;
+            // Add headers
+            AddExtraHeaders(ref request);
+
             try
             {
-                webResponse = request.GetResponse();
-                SetEncTokenIfReceived(webResponse);
+                response = await httpClient.SendAsync(request);
+                SetEncTokenIfReceived(response);
             }
-            catch (WebException e)
+            catch (HttpRequestException e)
             {
-                if (e.Response is null)
-                    throw e;
-
-                webResponse = e.Response;
+                throw new NetworkException(e.Message, HttpStatusCode.InternalServerError);
             }
 
-            using (Stream webStream = webResponse.GetResponseStream())
+            var responseContent = await response.Content.ReadAsStringAsync();
+            if (_enableLogging) Console.WriteLine("DEBUG: " + (int)response.StatusCode + " " + responseContent + "\n");
+
+            if (response.Content.Headers.ContentType?.MediaType == "application/json")
             {
-                using (StreamReader responseReader = new StreamReader(webStream))
+                var responseDictionary = Utils.JsonDeserialize(responseContent);
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    string response = responseReader.ReadToEnd();
-                    if (_enableLogging) Console.WriteLine("DEBUG: " + (int)((HttpWebResponse)webResponse).StatusCode + " " + response + "\n");
+                    string errorType = "GeneralException";
+                    string message = "";
 
-                    HttpStatusCode status = ((HttpWebResponse)webResponse).StatusCode;
+                    if (responseDictionary.ContainsKey("error_type"))
+                        errorType = responseDictionary["error_type"];
 
-                    if (webResponse.ContentType == "application/json")
+                    if (responseDictionary.ContainsKey("message"))
+                        message = responseDictionary["message"];
+
+                    switch (errorType)
                     {
-                        Dictionary<string, dynamic> responseDictionary = Utils.JsonDeserialize(response);
-
-                        if (status != HttpStatusCode.OK)
-                        {
-                            string errorType = "GeneralException";
-                            string message = "";
-
-                            if (responseDictionary.ContainsKey("error_type"))
-                                errorType = responseDictionary["error_type"];
-
-                            if (responseDictionary.ContainsKey("message"))
-                                message = responseDictionary["message"];
-
-                            switch (errorType)
+                        case "GeneralException": throw new GeneralException(message, response.StatusCode);
+                        case "TokenException":
                             {
-                                case "GeneralException": throw new GeneralException(message, status);
-                                case "TokenException":
-                                    {
-                                        _sessionHook?.Invoke();
-                                        throw new TokenException(message, status);
-                                    }
-                                case "PermissionException": throw new PermissionException(message, status);
-                                case "OrderException": throw new OrderException(message, status);
-                                case "InputException": throw new InputException(message, status);
-                                case "DataException": throw new DataException(message, status);
-                                case "NetworkException": throw new NetworkException(message, status);
-                                default: throw new GeneralException(message, status);
+                                _sessionHook?.Invoke();
+                                throw new TokenException(message, response.StatusCode);
                             }
-                        }
-
-                        return responseDictionary;
+                        case "PermissionException": throw new PermissionException(message, response.StatusCode);
+                        case "OrderException": throw new OrderException(message, response.StatusCode);
+                        case "InputException": throw new InputException(message, response.StatusCode);
+                        case "DataException": throw new DataException(message, response.StatusCode);
+                        case "NetworkException": throw new NetworkException(message, response.StatusCode);
+                        default: throw new GeneralException(message, response.StatusCode);
                     }
-                    else if (webResponse.ContentType == "text/csv")
-                        return Utils.ParseCSV(response);
-                    else
-                        throw new DataException("Unexpected content type " + webResponse.ContentType + " " + response);
                 }
+
+                return responseDictionary;
+            }
+            else if (response.Content.Headers.ContentType?.MediaType == "text/csv")
+            {
+                return Utils.ParseCSV(responseContent);
+            }
+            else
+            {
+                throw new DataException("Unexpected content type " + response.Content.Headers.ContentType?.MediaType + " " + responseContent);
             }
         }
 

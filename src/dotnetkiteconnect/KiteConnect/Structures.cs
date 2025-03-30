@@ -103,6 +103,10 @@ namespace KiteConnect
                 ISIN = data["isin"];
                 RealisedQuantity = Convert.ToInt32(data["realised_quantity"]);
                 Quantity = Convert.ToInt32(data["quantity"]);
+                UsedQuantity = Convert.ToInt32(data["used_quantity"]);
+                AuthorisedQuantity = Convert.ToInt32(data["authorised_quantity"]);
+                AuthorisedDate = Utils.StringToDate(data["authorised_date"]);
+                Discrepancy = data["discrepancy"];
             }
             catch (Exception e)
             {
@@ -125,6 +129,72 @@ namespace KiteConnect
         public string ISIN { get; set; }
         public int RealisedQuantity { get; set; }
         public int Quantity { get; set; }
+        public int UsedQuantity { get; set; }
+        public int AuthorisedQuantity { get; set; }
+        public DateTime? AuthorisedDate { get; set; }
+        public bool Discrepancy { get; set; }
+    }
+
+    /// <summary>
+    /// AuctionInstrument structure
+    /// </summary>
+    public struct AuctionInstrument
+    {
+        public AuctionInstrument(Dictionary<string, dynamic> data)
+        {
+            try
+            {
+                TradingSymbol = data["tradingsymbol"];
+                Exchange = data["exchange"];
+                InstrumentToken = Convert.ToUInt32(data["instrument_token"]);
+                ISIN = data["isin"];
+                Product = data["product"];
+                Price = data["price"];
+                Quantity = Convert.ToInt32(data["quantity"]);
+                T1Quantity = Convert.ToInt32(data["t1_quantity"]);
+                RealisedQuantity = Convert.ToInt32(data["realised_quantity"]);
+                AuthorisedQuantity = Convert.ToInt32(data["authorised_quantity"]);
+                AuthorisedDate = Utils.StringToDate(data["authorised_date"]);
+                OpeningQuantity = Convert.ToInt32(data["opening_quantity"]);
+                CollateralQuantity = Convert.ToInt32(data["collateral_quantity"]);
+                CollateralType = data["collateral_type"];
+                Discrepancy = data["discrepancy"];
+                AveragePrice = data["average_price"];
+                LastPrice = data["last_price"];
+                ClosePrice = data["close_price"];
+                PNL = data["pnl"];
+                DayChange = data["day_change"];
+                DayChangePercentage = data["day_change_percentage"];
+                AuctionNumber = data["auction_number"];
+            }
+            catch (Exception e)
+            {
+                throw new DataException(e.Message + " " + Utils.JsonSerialize(data), HttpStatusCode.OK, e);
+            }
+        }
+
+        public string TradingSymbol { get; set; }
+        public string Exchange { get; set; }
+        public UInt32 InstrumentToken { get; set; }
+        public string ISIN { get; set; }
+        public string Product { get; set; }
+        public decimal Price { get; set; }
+        public int Quantity { get; set; }
+        public int T1Quantity { get; set; }
+        public int RealisedQuantity { get; set; }
+        public int AuthorisedQuantity { get; set; }
+        public DateTime? AuthorisedDate { get; set; }
+        public int OpeningQuantity { get; set; }
+        public int CollateralQuantity { get; set; }
+        public string CollateralType { get; set; }
+        public bool Discrepancy { get; set; }
+        public decimal AveragePrice { get; set; }
+        public decimal LastPrice { get; set; }
+        public decimal ClosePrice { get; set; }
+        public decimal PNL { get; set; }
+        public decimal DayChange { get; set; }
+        public decimal DayChangePercentage { get; set; }
+        public string AuctionNumber { get; set; }
     }
 
     /// <summary>
@@ -242,14 +312,49 @@ namespace KiteConnect
     /// </summary>
     public struct OrderMarginParams
     {
+        /// <summary>
+        /// Exchange in which instrument is listed (Constants.EXCHANGE_NSE, Constants.EXCHANGE_BSE, etc.)
+        /// </summary>
         public string Exchange { get; set; }
+
+        /// <summary>
+        /// Tradingsymbol of the instrument  (ex. RELIANCE, INFY)
+        /// </summary>
         public string TradingSymbol { get; set; }
+
+        /// <summary>
+        /// Transaction type (Constants.TRANSACTION_TYPE_BUY or Constants.TRANSACTION_TYPE_SELL)
+        /// </summary>
         public string TransactionType { get; set; }
+
+        /// <summary>
+        /// Order quantity
+        /// </summary>
         public int Quantity { get; set; }
+
+        /// <summary>
+        /// Order Price
+        /// </summary>
         public decimal? Price { get; set; }
+
+        /// <summary>
+        /// Trigger price
+        /// </summary>
         public decimal? TriggerPrice { get; set; }
+
+        /// <summary>
+        /// Product code (Constants.PRODUCT_CNC, Constants.PRODUCT_MIS, Constants.PRODUCT_NRML)
+        /// </summary>
         public string Product { get; set; }
+
+        /// <summary>
+        /// Order type (Constants.ORDER_TYPE_MARKET, Constants.ORDER_TYPE_SL, etc.)
+        /// </summary>
         public string OrderType { get; set; }
+
+        /// <summary>
+        /// Variety (Constants.VARIETY_REGULAR, Constants.VARIETY_AMO, etc.)
+        /// </summary>
         public string Variety { get; set; }
     }
 
@@ -275,6 +380,8 @@ namespace KiteConnect
                 BO = Utils.GetValueOrDefault(data, "bo", 0m);
                 Cash = Utils.GetValueOrDefault(data, "cash", 0m);
                 VAR = Utils.GetValueOrDefault(data, "var", 0m);
+                Leverage = Utils.GetValueOrDefault(data, "leverage", 0m);
+                Charges = new OrderCharges(Utils.GetValueOrDefault(data, "charges", new Dictionary<string, dynamic>()));
                 PNL = new OrderMarginPNL(Utils.GetValueOrDefault(data, "pnl", new Dictionary<string, dynamic>()));
             }
             catch (Exception e)
@@ -294,6 +401,190 @@ namespace KiteConnect
         public decimal Cash { get; set; }
         public decimal VAR { get; set; }
         public OrderMarginPNL PNL { get; set; }
+        public OrderCharges Charges { get; set; }
+        public decimal Leverage { get; set; }
+        public decimal Total { get; set; }
+    }
+
+    /// <summary>
+    /// ContractNoteParams structure
+    /// </summary>
+    public struct ContractNoteParams
+    {
+        /// <summary>
+        /// Order ID that is received in the orderbook
+        /// </summary>
+        public string OrderID { get; set; }
+
+        /// <summary>
+        /// Exchange in which instrument is listed (Constants.EXCHANGE_NSE, Constants.EXCHANGE_BSE, etc.)
+        /// </summary>
+        public string Exchange { get; set; }
+
+        /// <summary>
+        /// Tradingsymbol of the instrument  (ex. RELIANCE, INFY)
+        /// </summary>
+        public string TradingSymbol { get; set; }
+
+        /// <summary>
+        /// Transaction type (Constants.TRANSACTION_TYPE_BUY or Constants.TRANSACTION_TYPE_SELL)
+        /// </summary>
+        public string TransactionType { get; set; }
+
+        /// <summary>
+        /// Order quantity
+        /// </summary>
+        public int Quantity { get; set; }
+
+        /// <summary>
+        /// Average price
+        /// </summary>
+        public decimal? AveragePrice { get; set; }
+
+        /// <summary>
+        /// Product code (Constants.PRODUCT_CNC, Constants.PRODUCT_MIS, Constants.PRODUCT_NRML)
+        /// </summary>
+        public string Product { get; set; }
+
+        /// <summary>
+        /// Order type (Constants.ORDER_TYPE_MARKET, Constants.ORDER_TYPE_SL, etc.)
+        /// </summary>
+        public string OrderType { get; set; }
+
+        /// <summary>
+        /// Variety (Constants.VARIETY_REGULAR, Constants.VARIETY_AMO, etc.)
+        /// </summary>
+        public string Variety { get; set; }
+    }
+
+    /// <summary>
+    /// ContractNote structure
+    /// </summary>
+    public struct ContractNote
+    {
+        public ContractNote(Dictionary<string, dynamic> data)
+        {
+            try
+            {
+                Exchange = data["exchange"];
+                TradingSymbol = data["tradingsymbol"];
+                TransactionType = data["transaction_type"];
+                Quantity = Convert.ToInt32(data["quantity"]);
+                Price = Utils.GetValueOrDefault(data, "price", 0m);
+                Product = data["product"];
+                OrderType = data["order_type"];
+                Variety = data["variety"];
+                Charges = new OrderCharges(Utils.GetValueOrDefault(data, "charges", new Dictionary<string, dynamic>()));
+            }
+            catch (Exception e)
+            {
+                throw new DataException(e.Message + " " + Utils.JsonSerialize(data), HttpStatusCode.OK, e);
+            }
+        }
+    
+        /// <summary>
+        /// Exchange in which instrument is listed (Constants.EXCHANGE_NSE, Constants.EXCHANGE_BSE, etc.)
+        /// </summary>
+        public string Exchange { get; set; }
+
+        /// <summary>
+        /// Tradingsymbol of the instrument  (ex. RELIANCE, INFY)
+        /// </summary>
+        public string TradingSymbol { get; set; }
+
+        /// <summary>
+        /// Transaction type (Constants.TRANSACTION_TYPE_BUY or Constants.TRANSACTION_TYPE_SELL)
+        /// </summary>
+        public string TransactionType { get; set; }
+
+        /// <summary>
+        /// Order quantity
+        /// </summary>
+        public int Quantity { get; set; }
+
+        /// <summary>
+        /// Order price
+        /// </summary>
+        public decimal? Price { get; set; }
+
+        /// <summary>
+        /// Product code (Constants.PRODUCT_CNC, Constants.PRODUCT_MIS, Constants.PRODUCT_NRML)
+        /// </summary>
+        public string Product { get; set; }
+
+        /// <summary>
+        /// Order type (Constants.ORDER_TYPE_MARKET, Constants.ORDER_TYPE_SL, etc.)
+        /// </summary>
+        public string OrderType { get; set; }
+
+        /// <summary>
+        /// Variety (Constants.VARIETY_REGULAR, Constants.VARIETY_AMO, etc.)
+        /// </summary>
+        public string Variety { get; set; }
+
+        /// <summary>
+        /// Order charges
+        /// </summary>
+        public OrderCharges Charges { get; set; }
+    }
+
+    /// <summary>
+    /// OrderCharges structure
+    /// </summary>
+    public struct OrderCharges
+    {
+        public OrderCharges(Dictionary<string, dynamic> data)
+        {
+            try
+            {
+                TransactionTax = Utils.GetValueOrDefault(data, "transaction_tax", 0m);
+                TransactionTaxType = Utils.GetValueOrDefault(data, "transaction_tax_type", "");
+                ExchangeTurnoverCharge = Utils.GetValueOrDefault(data, "exchange_turnover_charge", 0m);
+                SEBITurnoverCharge = Utils.GetValueOrDefault(data, "sebi_turnover_charge", 0m);
+                Brokerage = Utils.GetValueOrDefault(data, "brokerage", 0m);
+                StampDuty = Utils.GetValueOrDefault(data, "stamp_duty", 0m);
+                Total = Utils.GetValueOrDefault(data, "total", 0m);
+                GST = new OrderChargesGST(Utils.GetValueOrDefault(data, "gst", new Dictionary<string, dynamic>()));
+            }
+            catch (Exception e)
+            {
+                throw new DataException(e.Message + " " + Utils.JsonSerialize(data), HttpStatusCode.OK, e);
+            }
+        }
+
+        public decimal TransactionTax { get; set; }
+        public string TransactionTaxType { get; set; }
+        public decimal ExchangeTurnoverCharge { get; set; }
+        public decimal SEBITurnoverCharge { get; set; }
+        public decimal Brokerage { get; set; }
+        public decimal StampDuty { get; set; }
+        public decimal Total { get; set; }
+        public OrderChargesGST GST { get; set; }
+    }
+
+    /// <summary>
+    /// OrderChargesGST structure
+    /// </summary>
+    public struct OrderChargesGST
+    {
+        public OrderChargesGST(Dictionary<string, dynamic> data)
+        {
+            try
+            {
+                IGST = Utils.GetValueOrDefault(data, "igst", 0m);
+                CGST = Utils.GetValueOrDefault(data, "cgst", 0m);
+                SGST = Utils.GetValueOrDefault(data, "sgst", 0m);
+                Total = Utils.GetValueOrDefault(data, "total", 0m);
+            }
+            catch (Exception e)
+            {
+                throw new DataException(e.Message + " " + Utils.JsonSerialize(data), HttpStatusCode.OK, e);
+            }
+        }
+
+        public decimal IGST { get; set; }
+        public decimal CGST { get; set; }
+        public decimal SGST { get; set; }
         public decimal Total { get; set; }
     }
 
@@ -489,6 +780,13 @@ namespace KiteConnect
                     ValidityTTL = Convert.ToInt32(data["validity_ttl"]);
                 }
                 Variety = data["variety"];
+
+                AuctionNumber = 0;
+                if (data.ContainsKey("auction_number"))
+                {
+                    AuctionNumber = Convert.ToInt32(data["auction_number"]);
+                }
+
                 Meta = new Dictionary<string, dynamic>();
                 if (data.ContainsKey("meta"))
                 {
@@ -528,6 +826,7 @@ namespace KiteConnect
         public decimal TriggerPrice { get; set; }
         public string Validity { get; set; }
         public int ValidityTTL { get; set; }
+        public int AuctionNumber { get; set; }
         public string Variety { get; set; }
         public Dictionary<string, dynamic> Meta { get; set; }
     }

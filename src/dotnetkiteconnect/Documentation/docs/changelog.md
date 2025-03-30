@@ -1,3 +1,28 @@
+## 4.3.0
+
+* Using HttpClient for HTTP requests. Fixes #36 and #39.
+* Using SHA256.HashData instead of SHA256Managed. Fixes #41.
+
+## 4.2.1
+
+* Fixed Tick.Change value for MODE_FULL
+
+## 4.2.0
+
+* New API to get Virtual contract notes
+
+## 4.1.1
+
+* AuctionNumber param in PlaceOrder
+
+## 4.1.0
+
+* .NET target is now `net6.0`. Previous target `netstandard2.0` has reached end-of-life as of Dec 2022.
+* Charges data in the `GetMargins` API.
+* New API to get Auctions data - `GetAuctionInstruments`.
+* New variety `VARIETY_AUCTION` supported in `PlaceOrder`.
+* New fields in `Holding` struct.
+
 ## 4.0.1
 
 * Updated login URL to https://kite.zerodha.com

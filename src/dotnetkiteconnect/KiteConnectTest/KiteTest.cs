@@ -35,6 +35,16 @@ namespace KiteConnectTest
 
 
         [TestMethod]
+        public void TestError()
+        {
+            string json = File.ReadAllText(@"responses/error.json", Encoding.UTF8);
+            ms.SetStatusCode(403);
+            ms.SetResponse("application/json", json);
+            Kite kite = new Kite("apikey", Root: "http://localhost:8080", Debug: true);
+            Assert.ThrowsException<GeneralException>(() => kite.GetProfile());
+        }
+
+        [TestMethod]
         public void TestProfile()
         {
             string json = File.ReadAllText(@"responses/profile.json", Encoding.UTF8);
@@ -63,7 +73,17 @@ namespace KiteConnectTest
             ms.SetResponse("application/json", json);
             Kite kite = new Kite("apikey", Root: "http://localhost:8080");
             List<Holding> holdings = kite.GetHoldings();
-            Assert.AreEqual(holdings.Count, 1);
+            Assert.AreEqual(holdings[0].AveragePrice, 40.67m);
+        }
+
+        [TestMethod]
+        public void TestAuctionInstruments()
+        {
+            string json = File.ReadAllText(@"responses/auction_instruments.json", Encoding.UTF8);
+            ms.SetResponse("application/json", json);
+            Kite kite = new Kite("apikey", Root: "http://localhost:8080");
+            List<AuctionInstrument> instruments = kite.GetAuctionInstruments();
+            Assert.AreEqual(instruments[0].PNL, 564.8000000000002m);
         }
 
         [TestMethod]
@@ -98,6 +118,9 @@ namespace KiteConnectTest
 
             Assert.AreEqual(margins[0].Total, (decimal)8.36025);
             Assert.AreEqual(margins[0].SPAN, (decimal)5.408);
+            Assert.AreEqual(margins[0].Leverage, (decimal)5);
+            Assert.AreEqual(margins[0].Charges.TransactionTax, (decimal)0.5);
+            Assert.AreEqual(margins[0].Charges.GST.IGST, (decimal)0.386496);
         }
 
         [TestMethod]
@@ -265,6 +288,8 @@ namespace KiteConnectTest
             Assert.AreEqual(orders[3].ValidityTTL, 2);
 
             Assert.AreEqual(orders[3].Meta["iceberg"]["legs"], 5);
+
+            Assert.AreEqual(orders[0].AuctionNumber, 10);
         }
 
         [TestMethod]
